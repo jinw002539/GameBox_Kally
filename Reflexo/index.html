@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reflexo Supremo</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --primary: #00f2ff; /* Ciano Neon */
+            --danger: #ff0055;  /* Rosa/Vermelho Neon */
+            --success: #00ff88; /* Verde Neon */
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; background: var(--bg); color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* Telas e Transições */
+        .screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px;
+        }
+        
+        .hidden { opacity: 0; pointer-events: none; transform: scale(0.8) translateY(20px); }
+
+        /* Estilização de Texto */
+        h1 { 
+            font-size: 3.5rem; margin: 0; line-height: 0.9; text-align: center;
+            letter-spacing: -3px; font-weight: 900;
+            background: linear-gradient(to bottom, #fff, var(--primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        p { opacity: 0.6; letter-spacing: 1px; margin-bottom: 30px; }
+
+        /* Botão Estilizado */
+        .btn-start {
+            padding: 18px 45px; font-size: 1.1rem;
+            background: var(--primary); border: none; border-radius: 15px;
+            color: black; font-weight: 900; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.3); 
+            transition: 0.2s; text-transform: uppercase;
+        }
+        .btn-start:active { transform: scale(0.92); }
+
+        /* O Círculo Central */
+        .game-circle {
+            width: 75vw; height: 75vw; max-width: 320px; max-height: 320px;
+            border-radius: 50%; border: 12px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; cursor: pointer; position: relative;
+            transition: background 0.1s, box-shadow 0.1s, transform 0.1s;
+        }
+        .game-circle:active { transform: scale(0.96); }
+        
+        .waiting { background: var(--primary); box-shadow: 0 0 60px var(--primary); }
+        .danger { background: var(--danger); box-shadow: 0 0 80px var(--danger); }
+        .success { background: var(--success); box-shadow: 0 0 100px var(--success); }
+
+        #instruction { font-weight: 900; font-size: 1.4rem; text-align: center; color: rgba(0,0,0,0.7); }
+
+        /* Modal de Resultado */
+        .modal-card {
+            background: rgba(20, 20, 20, 0.95);
+            padding: 40px; border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center; width: 90%; max-width: 400px;
+            backdrop-filter: blur(15px);
+        }
+
+        #result-value { font-size: 4.5rem; font-weight: 900; margin: 10px 0; }
+        .score-board { position: absolute; top: 40px; font-weight: bold; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div id="menu-screen" class="screen">
+        <h1>REFLEXO<br>SUPREMO</h1>
+        <p>REAÇÃO NEURAL PURA</p>
+        <button class="btn-start" onclick="startGame()">JOGAR AGORA</button>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div class="score-board">RECORDE: <span id="highscore">0ms</span></div>
+        <div id="main-circle" class="game-circle">
+            <span id="instruction">AGUARDE...</span>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="screen hidden" style="background: rgba(0,0,0,0.8); z-index: 100;">
+        <div class="modal-card">
+            <h2 id="modal-title" style="margin:0; opacity: 0.7; font-size: 1rem; letter-spacing: 2px;">SEU TEMPO</h2>
+            <div id="result-value">0ms</div>
+            <p id="modal-msg">Prepare seus dedos...</p>
+            <button class="btn-start" style="width: 100%;" onclick="closeModal()">TENTAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SISTEMA DE SOM (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            } else if (type === 'error') {
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            } else if (type === 'start') {
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            }
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // --- LÓGICA DO JOGO ---
+        const menuScreen = document.getElementById('menu-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const modal = document.getElementById('modal-overlay');
+        const circle = document.getElementById('main-circle');
+        const instruction = document.getElementById('instruction');
+        const highscoreEl = document.getElementById('highscore');
+        const resultValue = document.getElementById('result-value');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalTitle = document.getElementById('modal-title');
+
+        let gameState = 'menu';
+        let startTime;
+        let timeoutId;
+        let highscore = localStorage.getItem('reflexo-score') || 0;
+        highscoreEl.innerText = highscore + 'ms';
+
+        function startGame() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            playSound('start');
+            menuScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            resetRound();
+        }
+
+        function resetRound() {
+            gameState = 'waiting';
+            circle.className = 'game-circle waiting';
+            instruction.innerText = 'AGUARDE...';
+            
+            const waitTime = Math.random() * 3000 + 2000;
+            
+            timeoutId = setTimeout(() => {
+                const isTrap = Math.random() > 0.85; // 15% de chance de pegadinha
+                
+                if(isTrap) {
+                    gameState = 'danger';
+                    circle.className = 'game-circle danger';
+                    instruction.innerText = 'NÃO CLIQUE!';
+                    setTimeout(() => { if(gameState === 'danger') resetRound(); }, 1000);
+                } else {
+                    gameState = 'go';
+                    circle.className = 'game-circle success';
+                    instruction.innerText = 'CLIQUE!';
+                    startTime = performance.now();
+                }
+            }, waitTime);
+        }
+
+        function handleInput(e) {
+            e.preventDefault(); // Evita zoom/scroll no mobile
+
+            if (gameState === 'waiting' || gameState === 'danger') {
+                clearTimeout(timeoutId);
+                playSound('error');
+                showModal(0, true);
+            } 
+            else if (gameState === 'go') {
+                const endTime = performance.now();
+                const reactionTime = Math.round(endTime - startTime);
+                playSound('success');
+
+                if (reactionTime < highscore || highscore == 0) {
+                    highscore = reactionTime;
+                    localStorage.setItem('reflexo-score', highscore);
+                    highscoreEl.innerText = highscore + 'ms';
+                }
+                
+                showModal(reactionTime);
+                gameState = 'result';
+            }
+        }
+
+        circle.addEventListener('mousedown', handleInput);
+        circle.addEventListener('touchstart', handleInput);
+
+        function showModal(time, isEarly = false) {
+            modal.classList.remove('hidden');
+            if (isEarly) {
+                modalTitle.innerText = "OPS...";
+                resultValue.innerText = "CEDO!";
+                resultValue.style.color = "var(--danger)";
+                modalMsg.innerText = "Você clicou antes da hora.";
+            } else {
+                modalTitle.innerText = "REACTION TIME";
+                resultValue.innerText = time + "ms";
+                resultValue.style.color = "var(--success)";
+                
+                if(time < 200) modalMsg.innerText = "VELOCIDADE DE ELITE! 🔥";
+                else if(time < 300) modalMsg.innerText = "Muito bom, Relâmpago! ⚡";
+                else modalMsg.innerText = "Dá para ser mais rápido! ⏱️";
+            }
+        }
+
+        function closeModal() {
+            playSound('start');
+            modal.classList.add('hidden');
+            resetRound();
+        }
+
+        // Impede o botão direito
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-MZ">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameBox Kally | Sua Biblioteca</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>A carregar jogo...</p>
+    </div>
+
+    <header>
+        <div class="logo">🎮 GameBox <span>Kally</span></div>
+        <p>A tua biblioteca de jogos</p>
+    </header>
+
+    <main class="container">
+        <div class="game-card">
+            <div class="game-icon">🌍</div>
+            <div class="game-info">
+                <h3>Jogo das Capitais</h3>
+                <p>Teste seus conhecimentos geográficos e descubra o mundo.</p>
+                <a href="Jogo_das_capitais/index.html" class="btn-play">Jogar Agora</a>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-icon">🚀</div>
+            <div class="game-info">
+                <h3>Nebula Raider</h3>
+                <p>Sobreviva aos ataques alienígenas nesta aventura espacial.</p>
+                <a href="Nebula_raider/index.html" class="btn-play">Jogar Agora</a>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-icon">🏁</div>
+            <div class="game-info">
+                <h3>Neon Checkers</h3>
+                <p>O clássico jogo de damas com um visual futurista e neon.</p>
+                <a href="Neon_checkes/index.html" class="btn-play">Jogar Agora</a>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-icon">⚡</div>
+            <div class="game-info">
+                <h3>Reflexo</h3>
+                <p>Quão rápido você é? Teste sua velocidade de reação.</p>
+                <a href="Reflexo/index.html" class="btn-play">Jogar Agora</a>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-icon">⭕</div>
+            <div class="game-info">
+                <h3>X e O</h3>
+                <p>O famoso Jogo do Galo. Desafie seus amigos agora.</p>
+                <a href="X_O/index.html" class="btn-play">Jogar Agora</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; Kally 2026 GameBox</p>
+    </footer>
+
+    <script>
+        const buttons = document.querySelectorAll('.btn-play');
+        const loader = document.getElementById('loading-overlay');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                // 1. Impede o jogo de abrir imediatamente
+                e.preventDefault();
+
+                const linkDoJogo = this.getAttribute('href');
+
+                // 2. Mostra o loading
+                loader.style.display = 'flex';
+
+                // 3. Espera 5 segundos antes de mudar de página
+                setTimeout(() => {
+                    window.location.href = linkDoJogo;
+                }, 5000); // 5000 milisegundos = 5 segundos
+            });
+        });
+
+        // CORREÇÃO: Esconder o loading se o usuário voltar para a biblioteca
+        window.addEventListener('pageshow', function(event) {
+            // Se o usuário voltou via botão "Back", escondemos o loader
+            loader.style.display = 'none';
+        });
+
+        // Impede o botão direito
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+
+</body>
+</html>

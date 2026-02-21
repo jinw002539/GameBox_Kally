@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mestre das Capitais PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --primary: #3b82f6;
+            --accent: #f59e0b;
+            --correct: #10b981;
+            --wrong: #ef4444;
+            --glass: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+
+        /* Background Animado */
+        .bg-animation { position: fixed; width: 100%; height: 100%; z-index: -1; overflow: hidden; top: 0; left: 0; }
+        .circle { position: absolute; border-radius: 50%; background: linear-gradient(45deg, var(--primary), #8b5cf6); filter: blur(80px); opacity: 0.4; animation: float 10s infinite alternate; }
+        .circle:nth-child(1) { width: 300px; height: 300px; top: -100px; left: -50px; }
+        .circle:nth-child(2) { width: 250px; height: 250px; bottom: -50px; right: -50px; background: var(--accent); }
+        @keyframes float { from { transform: translate(0, 0); } to { transform: translate(30px, 50px); } }
+
+        /* Telas */
+        .screen { display: none; padding: 20px; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: absolute; top: 0; left: 0; }
+        .screen.active { display: flex; }
+
+        /* Cards */
+        .main-card { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 30px; padding: 30px 20px; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .game-logo { font-weight: 800; font-size: 2rem; line-height: 1.1; margin-bottom: 20px; }
+        .highlight { color: var(--accent); text-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+        
+        .btn-main { background: linear-gradient(to right, #2563eb, #3b82f6); color: white; border: none; width: 100%; padding: 18px; border-radius: 20px; font-size: 1.2rem; font-weight: 800; cursor: pointer; margin-top: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        
+        /* Mapa */
+        .map-header { display: flex; justify-content: space-around; width: 100%; max-width: 400px; margin-bottom: 15px; position: relative; z-index: 10; }
+        .pill { background: var(--glass); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border); font-weight: bold; backdrop-filter: blur(5px); }
+        .levels-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; overflow-y: auto; width: 100%; max-width: 400px; padding: 10px 10px 100px 10px; scrollbar-width: none; }
+        .level-node { aspect-ratio: 1/1; background: var(--glass); border: 2px solid var(--border); border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; position: relative; transition: 0.3s; }
+        .level-node.open { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; box-shadow: 0 8px 15px rgba(59, 130, 246, 0.4); color: white; }
+        .level-node.locked { opacity: 0.4; filter: grayscale(1); }
+        .node-stars { position: absolute; bottom: -8px; font-size: 10px; background: #1e293b; padding: 2px 8px; border-radius: 10px; color: var(--accent); white-space: nowrap; }
+
+        /* Jogo */
+        .timer-container { width: 100%; max-width: 400px; margin-bottom: 10px; }
+        .timer-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        #timer-fill { height: 100%; width: 100%; background: var(--correct); transition: width 1s linear; }
+        .question-box h2 { font-size: 2.2rem; margin: 20px 0; color: var(--accent); height: 80px; display: flex; align-items: center; justify-content: center; }
+        .options-grid { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 400px; }
+        .btn-opt { background: var(--glass); border: 1px solid var(--border); padding: 15px; border-radius: 15px; color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-opt.correct { background: var(--correct) !important; border: none; transform: scale(1.02); }
+        .btn-opt.wrong { background: var(--wrong) !important; border: none; animation: shake 0.4s; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+        .review-box { margin-top: 15px; max-height: 150px; overflow-y: auto; text-align: left; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 15px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animation"><div class="circle"></div><div class="circle"></div></div>
+
+    <section id="screen-start" class="screen active">
+        <div class="main-card">
+            <div class="game-logo">🌎 MESTRE DAS<br><span class="highlight">CAPITAIS</span></div>
+            <div class="pill">⭐ Total: <span id="total-stars-display">0</span></div>
+            <button class="btn-main" onclick="showMap()">JOGAR AGORA</button>
+        </div>
+    </section>
+
+    <section id="screen-map" class="screen">
+        <div class="map-header">
+            <div class="pill" onclick="showStart()" style="cursor:pointer">🏠 Sair</div>
+            <div class="pill">⭐ <span id="map-stars-count">0</span></div>
+            <div class="pill">🏆 FASE 40</div>
+        </div>
+        <div class="levels-grid" id="levels-container"></div>
+    </section>
+
+    <section id="screen-game" class="screen">
+        <div class="timer-container">
+            <div style="display:flex; justify-content: space-between; margin-bottom: 5px; font-weight: 800;">
+                <span id="level-label">Nível 1</span>
+                <span id="timer-text" style="color:var(--accent)">30s</span>
+            </div>
+            <div class="timer-bar"><div id="timer-fill"></div></div>
+        </div>
+        
+        <div class="question-box">
+            <h2 id="country-name">Portugal</h2>
+        </div>
+        <div class="options-grid" id="options-container"></div>
+    </section>
+
+    <section id="screen-result" class="screen">
+        <div class="main-card">
+            <h2 id="res-title">Bom Trabalho!</h2>
+            <div id="res-stars" style="font-size: 3.5rem; margin: 10px 0;">⭐⭐⭐</div>
+            <p id="res-score">Acertaste 0 de 0</p>
+            <div class="review-box" id="res-review"></div>
+            <button class="btn-main" onclick="showMap()">CONTINUAR</button>
+        </div>
+    </section>
+
+    <script>
+        // SONS
+        const sndOk = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+        const sndNo = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
+
+        // BANCO DE DADOS (Expandido)
+            const db = [
+    {p: "Afeganistão", c: "Cabul"}, {p: "Albânia", c: "Tirana"}, {p: "Alemanha", c: "Berlim"},
+    {p: "Andorra", c: "Andorra-a-Velha"}, {p: "Angola", c: "Luanda"}, {p: "Antiga e Barbuda", c: "Saint John's"},
+    {p: "Arábia Saudita", c: "Riade"}, {p: "Argélia", c: "Argel"}, {p: "Argentina", c: "Buenos Aires"},
+    {p: "Arménia", c: "Erevan"}, {p: "Austrália", c: "Camberra"}, {p: "Áustria", c: "Viena"},
+    {p: "Azerbaijão", c: "Bacu"}, {p: "Bahamas", c: "Nassau"}, {p: "Bangladexe", c: "Daca"},
+    {p: "Barbados", c: "Bridgetown"}, {p: "Barém", c: "Manama"}, {p: "Bélgica", c: "Bruxelas"},
+    {p: "Belize", c: "Belmopã"}, {p: "Benim", c: "Porto Novo"}, {p: "Bielorrússia", c: "Minsque"},
+    {p: "Bolívia", c: "Sucre"}, {p: "Bósnia e Herzegovina", c: "Saraievo"}, {p: "Botsuana", c: "Gaborone"},
+    {p: "Brasil", c: "Brasília"}, {p: "Brunei", c: "Bandar Seri Begauã"}, {p: "Bulgária", c: "Sófia"},
+    {p: "Burquina Faso", c: "Uagadugu"}, {p: "Burundi", c: "Guitega"}, {p: "Butão", c: "Timfu"},
+    {p: "Cabo Verde", c: "Praia"}, {p: "Camarões", c: "Iaundé"}, {p: "Camboja", c: "Pnom Pene"},
+    {p: "Canadá", c: "Otava"}, {p: "Catar", c: "Doa"}, {p: "Cazaquistão", c: "Astana"},
+    {p: "Chade", c: "Jamena"}, {p: "Chéquia", c: "Praga"}, {p: "Chile", c: "Santiago"},
+    {p: "China", c: "Pequim"}, {p: "Chipre", c: "Nicósia"}, {p: "Colômbia", c: "Bogotá"},
+    {p: "Comores", c: "Moroni"}, {p: "Congo-Brazzaville", c: "Brazzaville"}, {p: "Coreia do Norte", c: "Pionguiangue"},
+    {p: "Coreia do Sul", c: "Seul"}, {p: "Costa do Marfim", c: "Iamussucro"}, {p: "Costa Rica", c: "San José"},
+    {p: "Croácia", c: "Zagrebe"}, {p: "Cuba", c: "Havana"}, {p: "Dinamarca", c: "Copenhaga"},
+    {p: "Dominica", c: "Roseau"}, {p: "Egito", c: "Cairo"}, {p: "Emirados Árabes Unidos", c: "Abu Dhabi"},
+    {p: "Equador", c: "Quito"}, {p: "Eritreia", c: "Asmara"}, {p: "Eslováquia", c: "Bratislava"},
+    {p: "Eslovénia", c: "Liubliana"}, {p: "Espanha", c: "Madrid"}, {p: "Essuatíni", c: "Mbabane"},
+    {p: "Estados Unidos", c: "Washington, D.C."}, {p: "Estónia", c: "Talim"}, {p: "Etiópia", c: "Adis Abeba"},
+    {p: "Fiji", c: "Suva"}, {p: "Filipinas", c: "Manila"}, {p: "Finlândia", c: "Helsínquia"},
+    {p: "França", c: "Paris"}, {p: "Gabão", c: "Libreville"}, {p: "Gâmbia", c: "Banjul"},
+    {p: "Gana", c: "Acra"}, {p: "Geórgia", c: "Tbilissi"}, {p: "Granada", c: "Saint George's"},
+    {p: "Grécia", c: "Atenas"}, {p: "Guatemala", c: "Cidade de Guatemala"}, {p: "Guiana", c: "Georgetown"},
+    {p: "Guiné", c: "Conacri"}, {p: "Guiné Equatorial", c: "Malabo"}, {p: "Guiné-Bissau", c: "Bissau"},
+    {p: "Haiti", c: "Porto do Príncipe"}, {p: "Honduras", c: "Tegucigalpa"}, {p: "Hungria", c: "Budapeste"},
+    {p: "Iémen", c: "Saná"}, {p: "Ilhas Marechal", c: "Majuro"}, {p: "Ilhas Salomão", c: "Honiara"},
+    {p: "Índia", c: "Nova Deli"}, {p: "Indonésia", c: "Jacarta"}, {p: "Irão", c: "Teerão"},
+    {p: "Iraque", c: "Bagdade"}, {p: "Irlanda", c: "Dublim"}, {p: "Islândia", c: "Reiquiavique"},
+    {p: "Israel", c: "Jerusalém"}, {p: "Itália", c: "Roma"}, {p: "Jamaica", c: "Kingston"},
+    {p: "Japão", c: "Tóquio"}, {p: "Jibuti", c: "Jibuti"}, {p: "Jordânia", c: "Amã"},
+    {p: "Laos", c: "Vientiane"}, {p: "Lesoto", c: "Maseru"}, {p: "Letónia", c: "Riga"},
+    {p: "Líbano", c: "Beirute"}, {p: "Libéria", c: "Monróvia"}, {p: "Líbia", c: "Trípoli"},
+    {p: "Listenstaine", c: "Vaduz"}, {p: "Lituânia", c: "Vílnius"}, {p: "Luxemburgo", c: "Luxemburgo"},
+    {p: "Macedónia do Norte", c: "Escópia"}, {p: "Madagáscar", c: "Antananarivo"}, {p: "Malásia", c: "Cuala Lumpur"},
+    {p: "Maláui", c: "Lilôngue"}, {p: "Maldivas", c: "Malé"}, {p: "Mali", c: "Bamaco"},
+    {p: "Malta", c: "Valeta"}, {p: "Marrocos", c: "Rebate"}, {p: "Maurícia", c: "Porto Luís"},
+    {p: "Mauritânia", c: "Nuaquechote"}, {p: "México", c: "Cidade do México"}, {p: "Mianmar", c: "Nepidó"},
+    {p: "Micronésia", c: "Paliquir"}, {p: "Moçambique", c: "Maputo"}, {p: "Moldávia", c: "Quixinau"},
+    {p: "Mónaco", c: "Mónaco"}, {p: "Mongólia", c: "Ulã Bator"}, {p: "Montenegro", c: "Podgoritsa"},
+    {p: "Namíbia", c: "Vinduque"}, {p: "Nauru", c: "Iarem"}, {p: "Nepal", c: "Catmandu"},
+    {p: "Nicarágua", c: "Manágua"}, {p: "Níger", c: "Niamei"}, {p: "Nigéria", c: "Abuja"},
+    {p: "Noruega", c: "Oslo"}, {p: "Nova Zelândia", c: "Wellington"}, {p: "Omã", c: "Mascate"},
+    {p: "Países Baixos", c: "Amesterdão"}, {p: "Palau", c: "Ngerulmud"}, {p: "Panamá", c: "Cidade do Panamá"},
+    {p: "Papua Nova Guiné", c: "Porto Moresby"}, {p: "Paquistão", c: "Islamabade"}, {p: "Paraguai", c: "Assunção"},
+    {p: "Peru", c: "Lima"}, {p: "Polónia", c: "Varsóvia"}, {p: "Portugal", c: "Lisboa"},
+    {p: "Quénia", c: "Nairobi"}, {p: "Quirguistão", c: "Bisqueque"}, {p: "Quiribáti", c: "Taraua do Sul"},
+    {p: "Reino Unido", c: "Londres"}, {p: "República Centro-Africana", c: "Bangui"}, {p: "República Democrática do Congo", c: "Quinxassa"},
+    {p: "República Dominicana", c: "Santo Domingo"}, {p: "Roménia", c: "Bucareste"}, {p: "Ruanda", c: "Quigali"},
+    {p: "Rússia", c: "Moscovo"}, {p: "Samoa", c: "Apia"}, {p: "Santa Lúcia", c: "Castries"},
+    {p: "São Cristóvão e Neves", c: "Basseterre"}, {p: "São Marinho", c: "São Marinho"}, {p: "São Tomé e Príncipe", c: "São Tomé"},
+    {p: "São Vicente e Granadinas", c: "Kingstown"}, {p: "Seicheles", c: "Vitória"}, {p: "Senegal", c: "Dacar"},
+    {p: "Serra Leoa", c: "Freetown"}, {p: "Sérvia", c: "Belgrado"}, {p: "Singapura", c: "Singapura"},
+    {p: "Síria", c: "Damasco"}, {p: "Somália", c: "Mogadíscio"}, {p: "Sri Lanca", c: "Sri Jaiavardenapura-Cota"},
+    {p: "Sudão", c: "Cartum"}, {p: "Sudão do Sul", c: "Juba"}, {p: "Suécia", c: "Estocolmo"},
+    {p: "Suíça", c: "Berna"}, {p: "Suriname", c: "Paramaribo"}, {p: "Tailândia", c: "Banguecoque"},
+    {p: "Tajiquistão", c: "Duchambé"}, {p: "Tanzânia", c: "Dodoma"}, {p: "Timor-Leste", c: "Díli"},
+    {p: "Togo", c: "Lomé"}, {p: "Tonga", c: "Nacuolofa"}, {p: "Trindade e Tobago", c: "Porto de Espanha"},
+    {p: "Tunísia", c: "Tunes"}, {p: "Turquemenistão", c: "Asgabate"}, {p: "Turquia", c: "Ancara"},
+    {p: "Tuvalu", c: "Funafuti"}, {p: "Ucrânia", c: "Quieve"}, {p: "Uganda", c: "Campala"},
+    {p: "Uruguai", c: "Montevideu"}, {p: "Usbequistão", c: "Tasquente"}, {p: "Vanuatu", c: "Porto Vila"},
+    {p: "Venezuela", c: "Caracas"}, {p: "Vietname", c: "Hanói"}, {p: "Zâmbia", c: "Lusaca"},
+    {p: "Zimbábue", c: "Harare"}
+];
+        let state = { totalStars: 0, levels: {}, current: 1, qArray: [], qIdx: 0, score: 0, log: [] };
+        let timer, timeLeft = 30;
+
+        // LOAD / SAVE
+        if(localStorage.getItem('cap_game_pro')) {
+            state = JSON.parse(localStorage.getItem('cap_game_pro'));
+        }
+        function save() { localStorage.setItem('cap_game_pro', JSON.stringify(state)); }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showStart() {
+            document.getElementById('total-stars-display').innerText = state.totalStars;
+            showScreen('screen-start');
+        }
+
+        function showMap() {
+            const container = document.getElementById('levels-container');
+            container.innerHTML = '';
+            document.getElementById('map-stars-count').innerText = state.totalStars;
+            
+            for(let i = 1; i <= 40; i++) {
+                const req = (i > 3) ? Math.floor((i - 1) * 2.2) : 0;
+                const locked = state.totalStars < req;
+                const stars = state.levels[i] || 0;
+                
+                const div = document.createElement('div');
+                div.className = `level-node ${locked ? 'locked' : 'open'}`;
+                div.innerHTML = `<span>${i}</span><div class="node-stars">${locked ? '🔒 '+req : '⭐'.repeat(stars) || '---'}</div>`;
+                if(!locked) div.onclick = () => startLevel(i);
+                container.appendChild(div);
+            }
+            showScreen('screen-map');
+        }
+
+        function startLevel(n) {
+            state.current = n;
+            state.qIdx = 0; state.score = 0; state.log = [];
+            
+            let cfg = (n <= 10) ? {q:3, o:3} : (n <= 20) ? {q:8, o:4} : {q:10, o:5};
+            state.qArray = [...db].sort(() => 0.5 - Math.random()).slice(0, cfg.q);
+            
+            showScreen('screen-game');
+            document.getElementById('level-label').innerText = "Nível " + n;
+            loadQ(cfg.o);
+        }
+
+        function loadQ(oCount) {
+            clearInterval(timer);
+            timeLeft = 30;
+            updateTimerUI();
+
+            const q = state.qArray[state.qIdx];
+            document.getElementById('country-name').innerText = q.p;
+
+            let opts = [q.c];
+            while(opts.length < oCount) {
+                let r = db[Math.floor(Math.random() * db.length)].c;
+                if(!opts.includes(r)) opts.push(r);
+            }
+            opts.sort(() => 0.5 - Math.random());
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            opts.forEach(o => {
+                const b = document.createElement('div');
+                b.className = 'btn-opt';
+                b.innerText = o;
+                b.onclick = () => check(o, q.c, b);
+                container.appendChild(b);
+            });
+
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if(timeLeft <= 0) { clearInterval(timer); check(null, q.c, null); }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-text').innerText = timeLeft + "s";
+            document.getElementById('timer-fill').style.width = (timeLeft / 30 * 100) + "%";
+            document.getElementById('timer-fill').style.background = timeLeft < 10 ? "var(--wrong)" : "var(--correct)";
+        }
+
+        function check(sel, cor, btn) {
+            clearInterval(timer);
+            const btns = document.querySelectorAll('.btn-opt');
+            btns.forEach(b => b.style.pointerEvents = 'none');
+
+            const ok = sel === cor;
+            if(ok) { btn.classList.add('correct'); sndOk.play(); state.score++; }
+            else { 
+                if(btn) btn.classList.add('wrong'); 
+                sndNo.play();
+                btns.forEach(b => { if(b.innerText === cor) b.classList.add('correct'); });
+            }
+
+            state.log.push({p: state.qArray[state.qIdx].p, c: cor, ok: ok});
+
+            setTimeout(() => {
+                state.qIdx++;
+                if(state.qIdx < state.qArray.length) loadQ(btns.length);
+                else finish();
+            }, 1500);
+        }
+
+        function finish() {
+            const tot = state.qArray.length;
+            const pct = (state.score / tot) * 100;
+            const stars = (pct === 100) ? 3 : (pct >= 70) ? 2 : (pct >= 40) ? 1 : 0;
+            
+            const prev = state.levels[state.current] || 0;
+            if(stars > prev) {
+                state.totalStars += (stars - prev);
+                state.levels[state.current] = stars;
+                save();
+            }
+
+            document.getElementById('res-stars').innerText = stars > 0 ? "⭐".repeat(stars) : "❌";
+            document.getElementById('res-score').innerText = `Acertaste ${state.score} de ${tot}`;
+            document.getElementById('res-review').innerHTML = state.log.map(l => `
+                <div style="color:${l.ok?'#10b981':'#ef4444'}; margin-bottom:5px;">
+                    ${l.ok?'✅':'❌'} ${l.p}: <b>${l.c}</b>
+                </div>
+            `).join('');
+
+            showScreen('screen-result');
+        }
+
+        showStart();
+
+        // Impede o botão direito
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

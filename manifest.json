@@ -1,0 +1,16 @@
+{
+  "name": "GameBox Kally",
+  "short_name": "GameBox Kally",
+  "description": "A tua biblioteca de jogos de Moçambique",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0f1a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

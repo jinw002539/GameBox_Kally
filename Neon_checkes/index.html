@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Checkers: AI Edition</title>
+    <style>
+        :root {
+            --bg: #050508;
+            --cyan: #00f2ff;
+            --purple: #bc00ff;
+            --cell-dark: #0f111a;
+            --cell-light: #1a1d29;
+            --glass: rgba(0, 0, 0, 0.7);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            margin: 0; background: var(--bg); color: white;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        /* --- TELAS --- */
+        .screen {
+            position: fixed; inset: 0; background: var(--bg); display: flex;
+            flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #menu-screen {
+            /* Imagem de fundo atraente com overlay escuro */
+            background: linear-gradient(rgba(5, 5, 8, 0.8), rgba(5, 5, 8, 0.9)), url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1080&auto=format&fit=crop') center/cover;
+        }
+
+        .hidden { opacity: 0; pointer-events: none; transform: scale(1.1); }
+
+        .card {
+            background: var(--glass); padding: 30px; border-radius: 20px;
+            backdrop-filter: blur(10px); border: 1px solid rgba(0, 242, 255, 0.3);
+            text-align: center; width: 90%; max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        /* --- UI ELEMENTS --- */
+        .btn {
+            background: var(--cyan); color: #000; border: none; padding: 15px;
+            font-weight: 900; border-radius: 8px; cursor: pointer; margin-top: 10px;
+            width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-outline { background: transparent; border: 2px solid var(--cyan); color: var(--cyan); }
+        .btn-outline.active { background: var(--cyan); color: #000; }
+
+        .level-group { display: flex; gap: 5px; margin: 15px 0; display: none; }
+        .level-btn { flex: 1; padding: 10px; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .level-btn.active { background: var(--purple); border-color: var(--purple); }
+
+        input {
+            width: 100%; padding: 12px; margin: 8px 0; border-radius: 5px;
+            border: 1px solid #444; background: #111; color: #fff; text-align: center;
+        }
+
+        /* --- TABULEIRO --- */
+        #board-container {
+            position: relative; padding: 8px; background: #111; border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.1);
+            transition: transform 0.1s ease;
+        }
+        #board {
+            display: grid; grid-template-columns: repeat(8, 11.5vw); grid-template-rows: repeat(8, 11.5vw);
+            max-width: 480px; max-height: 480px;
+        }
+        @media (min-width: 500px) {
+            #board { grid-template-columns: repeat(8, 55px); grid-template-rows: repeat(8, 55px); }
+        }
+
+        .cell { display: flex; justify-content: center; align-items: center; position: relative; }
+        .dark { background: var(--cell-dark); }
+        .light { background: var(--cell-light); }
+
+        /* --- PEÇAS (Apenas Damas Redondas) --- */
+        .piece {
+            width: 80%; height: 80%; border-radius: 50%;
+            cursor: pointer; position: relative; z-index: 2;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .p1 { background: var(--cyan); box-shadow: 0 0 15px var(--cyan), inset 0 0 10px rgba(0,0,0,0.5); }
+        .p2 { background: var(--purple); box-shadow: 0 0 15px var(--purple), inset 0 0 10px rgba(0,0,0,0.5); }
+        .piece.king { border: 4px solid #fff; }
+        .piece.king::after { content: '★'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.2rem; text-shadow: 0 0 5px black; }
+        .selected { transform: scale(1.15); border-color: white; z-index: 10; box-shadow: 0 0 25px white; }
+
+        /* --- HINTS --- */
+        .hint { width: 25%; height: 25%; background: rgba(255,255,255,0.3); border-radius: 50%; position: absolute; pointer-events: none; }
+        .hint.capture { background: rgba(255, 0, 85, 0.6); width: 60%; height: 60%; border: 2px dashed #ff0055; box-shadow: 0 0 10px #ff0055; }
+
+        /* --- HUD --- */
+        .hud { display: flex; width: 100%; max-width: 480px; justify-content: space-between; margin-bottom: 15px; padding: 0 10px; }
+        .player-tag { padding: 8px 15px; border-radius: 8px; font-weight: 900; opacity: 0.4; transition: 0.3s; font-size: 0.9rem; text-transform: uppercase;}
+        .active-tag { opacity: 1; box-shadow: 0 0 15px currentColor; transform: translateY(-3px); }
+
+        /* SHAKE */
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-4px, 2px); }
+            50% { transform: translate(4px, -2px); }
+            75% { transform: translate(-4px, -2px); }
+        }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div id="menu-screen" class="screen">
+        <div class="card">
+            <h1 style="margin:0 0 5px 0; color:var(--cyan); font-size: 2.2rem; text-shadow: 0 0 15px var(--cyan);">NEON CHECKERS</h1>
+            <p style="opacity:0.8; font-size: 0.8rem; margin-bottom: 20px; color: #fff;">ESTRATÉGIA SUPREMA</p>
+            
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <button id="btn-ai" class="btn btn-outline active" onclick="setMode('ai')">VS IA</button>
+                <button id="btn-pvp" class="btn btn-outline" onclick="setMode('pvp')">2 PLAYERS</button>
+            </div>
+
+            <div id="ai-levels" class="level-group" style="display: flex;">
+                <button class="level-btn" onclick="setLevel('easy', this)">FÁCIL</button>
+                <button class="level-btn active" onclick="setLevel('normal', this)">NORMAL</button>
+                <button class="level-btn" onclick="setLevel('hard', this)">IMPOSSÍVEL</button>
+            </div>
+
+            <input type="text" id="p1-name" placeholder="SEU NOME">
+            <input type="text" id="p2-name" placeholder="NOME DO RIVAL" style="display:none;">
+            
+            <button class="btn" onclick="initGame()" style="margin-top: 20px;">INICIAR BATALHA</button>
+        </div>
+    </div>
+
+    <div class="hud">
+        <div id="tag-1" class="player-tag" style="background: var(--cyan); color: #000;">P1</div>
+        <div id="tag-2" class="player-tag" style="background: var(--purple); color: #fff;">P2</div>
+    </div>
+
+    <div id="board-container">
+        <div id="board"></div>
+    </div>
+
+    <div id="result-modal" class="screen hidden" style="background: rgba(0,0,0,0.95);">
+        <div class="card" style="border-color: var(--cyan);">
+            <h2 style="font-size: 1.5rem; opacity: 0.8;">FIM DE JOGO</h2>
+            <p id="winner-name" style="font-size: 2.5rem; color: var(--cyan); font-weight: 900; margin: 10px 0; text-shadow: 0 0 20px var(--cyan);"></p>
+            <p id="winner-msg" style="font-size: 1rem; margin-bottom: 20px;"></p>
+            <button class="btn" onclick="location.reload()">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <script>
+        let boardState = [];
+        let turn = 1;
+        let selected = null;
+        let moves = [];
+        let isAiMode = true;
+        let aiDifficulty = 'normal'; // easy, normal, hard
+        let p1Name = "", p2Name = "";
+
+        function setMode(mode) {
+            isAiMode = (mode === 'ai');
+            document.getElementById('p2-name').style.display = isAiMode ? 'none' : 'block';
+            document.getElementById('ai-levels').style.display = isAiMode ? 'flex' : 'none';
+            document.getElementById('btn-ai').classList.toggle('active', isAiMode);
+            document.getElementById('btn-pvp').classList.toggle('active', !isAiMode);
+        }
+
+        function setLevel(level, btn) {
+            aiDifficulty = level;
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function initGame() {
+            p1Name = document.getElementById('p1-name').value || "JOGADOR 1";
+            if(isAiMode) {
+                p2Name = aiDifficulty === 'hard' ? "IA: MODO DEUS" : (aiDifficulty === 'normal' ? "IA: CORE" : "IA: BOT");
+            } else {
+                p2Name = document.getElementById('p2-name').value || "JOGADOR 2";
+            }
+            
+            document.getElementById('tag-1').innerText = p1Name;
+            document.getElementById('tag-2').innerText = p2Name;
+            document.getElementById('menu-screen').classList.add('hidden');
+            
+            createBoard();
+            render();
+        }
+
+        function createBoard() {
+            boardState = Array(8).fill().map(() => Array(8).fill(0));
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    if((r + c) % 2 !== 0) {
+                        if(r < 3) boardState[r][c] = 2; // P2 (IA - Roxo - Topo)
+                        if(r > 4) boardState[r][c] = 1; // P1 (Ciano - Base)
+                    }
+                }
+            }
+        }
+
+        function render() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            
+            document.getElementById('tag-1').classList.toggle('active-tag', turn === 1);
+            document.getElementById('tag-2').classList.toggle('active-tag', turn === 2);
+
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${(r+c)%2===0 ? 'light' : 'dark'}`;
+                    
+                    const p = boardState[r][c];
+                    if(p > 0) {
+                        const piece = document.createElement('div');
+                        const owner = (p === 1 || p === 3) ? 1 : 2;
+                        piece.className = `piece p${owner} ${p > 2 ? 'king' : ''}`;
+                        if(selected && selected.r === r && selected.c === c) piece.classList.add('selected');
+                        
+                        piece.onclick = () => { if(turn !== 2 || !isAiMode) handleSelect(r, c); };
+                        cell.appendChild(piece);
+                    }
+
+                    const move = moves.find(m => m.tr === r && m.tc === c);
+                    if(move) {
+                        const hint = document.createElement('div');
+                        hint.className = `hint ${move.cap ? 'capture' : ''}`;
+                        cell.onclick = () => executeMove(move);
+                        cell.appendChild(hint);
+                    }
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleSelect(r, c) {
+            const p = boardState[r][c];
+            if(((p === 1 || p === 3) && turn === 1) || ((p === 2 || p === 4) && turn === 2)) {
+                
+                // Lógica de captura obrigatória para P1
+                const allPossibleMoves = getAllPlayerMoves(turn);
+                const hasCaptures = allPossibleMoves.some(m => m.cap);
+                
+                moves = getMoves(r, c, boardState);
+                
+                // Se existe uma captura no tabuleiro, OBRIGA a jogar com a peça que pode capturar
+                if(hasCaptures && !moves.some(m => m.cap)) {
+                    // Efeito visual de negação pode ser adicionado aqui
+                    return; 
+                }
+                
+                if (hasCaptures) moves = moves.filter(m => m.cap); // Filtra só as capturas se houver
+
+                selected = {r, c};
+                render();
+            }
+        }
+
+        function getMoves(r, c, board) {
+            const p = board[r][c];
+            const owner = (p === 1 || p === 3) ? 1 : 2;
+            const isKing = p > 2;
+            const res = [];
+            const dirs = isKing ? [-1, 1] : (owner === 1 ? [-1] : [1]);
+
+            dirs.forEach(dr => {
+                [-1, 1].forEach(dc => {
+                    let nr = r + dr, nc = c + dc;
+                    if(nr>=0 && nr<8 && nc>=0 && nc<8 && board[nr][nc] === 0) {
+                        res.push({fr:r, fc:c, tr:nr, tc:nc, cap: null});
+                    }
+                    let jr = r + dr*2, jc = c + dc*2;
+                    if(jr>=0 && jr<8 && jc>=0 && jc<8 && board[jr][jc] === 0) {
+                        const mid = board[r+dr][c+dc];
+                        if(mid !== 0 && ((owner === 1 && (mid === 2 || mid === 4)) || (owner === 2 && (mid === 1 || mid === 3)))) {
+                            res.push({fr:r, fc:c, tr:jr, tc:jc, cap: {r: r+dr, c: c+dc}});
+                        }
+                    }
+                });
+            });
+            return res;
+        }
+
+        function getAllPlayerMoves(player, board = boardState) {
+            let all = [];
+            for(let r=0; r<8; r++) {
+                for(let c=0; c<8; c++) {
+                    const p = board[r][c];
+                    if((player === 1 && (p === 1 || p === 3)) || (player === 2 && (p === 2 || p === 4))) {
+                        all.push(...getMoves(r, c, board));
+                    }
+                }
+            }
+            return all;
+        }
+
+        function executeMove(move) {
+            const p = boardState[move.fr][move.fc];
+            boardState[move.tr][move.tc] = p;
+            boardState[move.fr][move.fc] = 0;
+
+            if(move.cap) {
+                boardState[move.cap.r][move.cap.c] = 0;
+                const container = document.getElementById('board-container');
+                container.classList.add('shake');
+                setTimeout(() => container.classList.remove('shake'), 300);
+            }
+
+            // Promove a Rei
+            if(turn === 1 && move.tr === 0) boardState[move.tr][move.tc] = 3;
+            if(turn === 2 && move.tr === 7) boardState[move.tr][move.tc] = 4;
+
+            selected = null; moves = [];
+            
+            // Verifica se a captura pode continuar (Double Jump) - Simplificado: passa o turno
+            turn = (turn === 1) ? 2 : 1;
+            render();
+            
+            if(!checkWin() && isAiMode && turn === 2) {
+                document.getElementById('board').style.pointerEvents = 'none'; // Bloqueia toque
+                setTimeout(aiTurn, 500);
+            } else {
+                document.getElementById('board').style.pointerEvents = 'auto';
+            }
+        }
+
+        // --- LÓGICA DA IA ---
+        function aiTurn() {
+            let allMoves = getAllPlayerMoves(2);
+            if(allMoves.length === 0) { checkWin(); return; }
+
+            let captures = allMoves.filter(m => m.cap);
+            let chosenMove;
+
+            if (aiDifficulty === 'easy') {
+                // FÁCIL: Aleatório puro (se tiver captura, pega aleatório, senão movimento aleatório)
+                let pool = captures.length > 0 ? captures : allMoves;
+                chosenMove = pool[Math.floor(Math.random() * pool.length)];
+            
+            } else if (aiDifficulty === 'normal') {
+                // NORMAL: Prioriza captura, senão aleatório
+                if (captures.length > 0) {
+                    chosenMove = captures[Math.floor(Math.random() * captures.length)];
+                } else {
+                    chosenMove = allMoves[Math.floor(Math.random() * allMoves.length)];
+                }
+
+            } else {
+                // IMPOSSÍVEL: Heurística Inteligente
+                // 1. Obriga a capturar se puder (regra do jogo)
+                let pool = captures.length > 0 ? captures : allMoves;
+                let bestScore = -9999;
+                
+                pool.forEach(move => {
+                    let score = evaluateMove(move);
+                    if(score > bestScore) {
+                        bestScore = score;
+                        chosenMove = move;
+                    }
+                });
+            }
+
+            executeMove(chosenMove);
+        }
+
+        function evaluateMove(move) {
+            let score = 0;
+            
+            // Simula o movimento
+            let simulatedBoard = JSON.parse(JSON.stringify(boardState));
+            let piece = simulatedBoard[move.fr][move.fc];
+            simulatedBoard[move.tr][move.tc] = piece;
+            simulatedBoard[move.fr][move.fc] = 0;
+            if(move.cap) {
+                simulatedBoard[move.cap.r][move.cap.c] = 0;
+                score += 50; // Bônus gigante por capturar
+            }
+
+            // Bônus se virar rei
+            if (move.tr === 7 && piece === 2) score += 30;
+
+            // Bônus por ir para as bordas (lugares seguros)
+            if (move.tc === 0 || move.tc === 7) score += 5;
+            
+            // Bônus por avançar no tabuleiro
+            score += (move.tr * 2);
+
+            // PENALIDADE CRÍTICA: Se o movimento me colocar em risco de ser capturado pelo P1 no próximo turno
+            let p1Responses = getAllPlayerMoves(1, simulatedBoard);
+            let getsCaptured = p1Responses.some(resp => resp.cap && resp.cap.r === move.tr && resp.cap.c === move.tc);
+            
+            if (getsCaptured) {
+                score -= 100; // Foge desse movimento!
+            }
+
+            return score;
+        }
+
+        function checkWin() {
+            const p1 = boardState.flat().some(v => v === 1 || v === 3);
+            const p2 = boardState.flat().some(v => v === 2 || v === 4);
+            if(!p1 || !p2) {
+                const modal = document.getElementById('result-modal');
+                const winnerName = document.getElementById('winner-name');
+                const msg = document.getElementById('winner-msg');
+                
+                modal.classList.remove('hidden');
+                
+                if(!p2) {
+                    winnerName.innerText = p1Name + " VENCEU!";
+                    winnerName.style.color = "var(--cyan)";
+                    modal.querySelector('.card').style.borderColor = "var(--cyan)";
+                    msg.innerText = isAiMode && aiDifficulty === 'hard' ? "Você quebrou o sistema! Impressionante." : "Ótima estratégia.";
+                } else {
+                    winnerName.innerText = p2Name + " VENCEU!";
+                    winnerName.style.color = "var(--purple)";
+                    modal.querySelector('.card').style.borderColor = "var(--purple)";
+                    msg.innerText = isAiMode ? "As máquinas dominam novamente." : "Boa sorte na próxima.";
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Impede o botão direito
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>
