@@ -1,254 +1,343 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Reflexo Supremo</title>
+    <title>Quantum Math: Multiverse</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap');
+
         :root {
-            --bg: #050505;
-            --primary: #00f2ff; /* Ciano Neon */
-            --danger: #ff0055;  /* Rosa/Vermelho Neon */
-            --success: #00ff88; /* Verde Neon */
+            --bg: #030305;
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #ff007a;
+            --success: #39ff14;
+            --error: #ff3131;
             --glass: rgba(255, 255, 255, 0.05);
         }
-        
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+
+        * { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; user-select: none; }
+
         body {
-            margin: 0; background: var(--bg); color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            height: 100vh;
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; overflow: hidden;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #111, #000);
         }
 
-        /* Telas e Transições */
-        .screen {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            padding: 20px;
-        }
-        
-        .hidden { opacity: 0; pointer-events: none; transform: scale(0.8) translateY(20px); }
-
-        /* Estilização de Texto */
-        h1 { 
-            font-size: 3.5rem; margin: 0; line-height: 0.9; text-align: center;
-            letter-spacing: -3px; font-weight: 900;
-            background: linear-gradient(to bottom, #fff, var(--primary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        p { opacity: 0.6; letter-spacing: 1px; margin-bottom: 30px; }
-
-        /* Botão Estilizado */
-        .btn-start {
-            padding: 18px 45px; font-size: 1.1rem;
-            background: var(--primary); border: none; border-radius: 15px;
-            color: black; font-weight: 900; cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0, 242, 255, 0.3); 
-            transition: 0.2s; text-transform: uppercase;
-        }
-        .btn-start:active { transform: scale(0.92); }
-
-        /* O Círculo Central */
-        .game-circle {
-            width: 75vw; height: 75vw; max-width: 320px; max-height: 320px;
-            border-radius: 50%; border: 12px solid rgba(255,255,255,0.05);
-            display: flex; flex-direction: column; justify-content: center;
-            align-items: center; cursor: pointer; position: relative;
-            transition: background 0.1s, box-shadow 0.1s, transform 0.1s;
-        }
-        .game-circle:active { transform: scale(0.96); }
-        
-        .waiting { background: var(--primary); box-shadow: 0 0 60px var(--primary); }
-        .danger { background: var(--danger); box-shadow: 0 0 80px var(--danger); }
-        .success { background: var(--success); box-shadow: 0 0 100px var(--success); }
-
-        #instruction { font-weight: 900; font-size: 1.4rem; text-align: center; color: rgba(0,0,0,0.7); }
-
-        /* Modal de Resultado */
-        .modal-card {
-            background: rgba(20, 20, 20, 0.95);
-            padding: 40px; border-radius: 30px;
+        .main-container {
+            width: 95vw; max-width: 500px;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255,255,255,0.1);
-            text-align: center; width: 90%; max-width: 400px;
-            backdrop-filter: blur(15px);
+            border-radius: 32px;
+            padding: 25px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
         }
 
-        #result-value { font-size: 4.5rem; font-weight: 900; margin: 10px 0; }
-        .score-board { position: absolute; top: 40px; font-weight: bold; color: var(--primary); }
+        /* HUD */
+        .hud { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 700; color: var(--primary); font-size: 0.85rem; }
+        
+        .home-btn {
+            cursor: pointer;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.1);
+            width: 35px; height: 35px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .home-btn:hover { background: var(--primary); color: black; transform: scale(1.1); }
+
+        .timer-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        #timer-fill { width: 100%; height: 100%; background: var(--primary); transition: width 1s linear; }
+
+        .hidden { display: none !important; }
+        
+        /* MODOS DE JOGO */
+        .classic-display { font-size: 3rem; text-align: center; margin: 30px 0; font-family: 'Space Grotesk'; text-shadow: 0 0 20px var(--primary); }
+        .classic-input { width: 100%; padding: 20px; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; font-size: 2rem; text-align: center; outline: none; }
+
+        .slot-container { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 30px; min-height: 70px; }
+        .slot { width: 50px; height: 60px; border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; font-weight: 700; transition: 0.3s; }
+        .slot.filled { border-color: var(--primary); background: rgba(0,242,255,0.1); }
+        .slot.correct { border-color: var(--success); color: var(--success); box-shadow: 0 0 15px var(--success); }
+        .slot.wrong { border-color: var(--error); color: var(--error); animation: shake 0.4s; }
+
+        .tile-pool { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 20px; }
+        .tile { padding: 12px 15px; background: #1e1e24; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+
+        /* BOTÕES E MODAIS */
+        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-main { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; margin-top: 15px; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: 0.4s; }
+        .modal.active { opacity: 1; pointer-events: all; }
+        .modal-content { background: #0d0d11; padding: 35px; border-radius: 32px; width: 90%; max-width: 400px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+
+        .choice-card { background: rgba(255,255,255,0.03); padding: 18px; border-radius: 16px; margin: 10px 0; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; text-align: left; }
+        .choice-card:hover { border-color: var(--primary); background: rgba(0, 242, 255, 0.05); }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
     </style>
 </head>
 <body>
 
-    <div id="menu-screen" class="screen">
-        <h1>REFLEXO<br>SUPREMO</h1>
-        <p>REAÇÃO NEURAL PURA</p>
-        <button class="btn-start" onclick="startGame()">JOGAR AGORA</button>
-    </div>
+    <div class="main-container">
+        <div id="game-hud" class="hidden">
+            <div class="hud">
+                <div class="home-btn" onclick="Game.goHome()">🏠</div>
+                <div>NÍVEL <span id="ui-lvl">1</span></div>
+                <div id="ui-lives" style="color:var(--accent)">❤️❤️</div>
+                <div>SCORE: <span id="ui-score">0</span></div>
+            </div>
+            <div class="timer-bar"><div id="timer-fill"></div></div>
+        </div>
 
-    <div id="game-screen" class="screen hidden">
-        <div class="score-board">RECORDE: <span id="highscore">0ms</span></div>
-        <div id="main-circle" class="game-circle">
-            <span id="instruction">AGUARDE...</span>
+        <div id="screen-start">
+            <h1 style="text-align:center; margin-bottom:25px; font-family:'Space Grotesk'; letter-spacing:-1px; background:linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:2.2rem;">QUANTUM MATH</h1>
+            <div class="choice-card" onclick="Game.setMode('classic')">
+                <h3 style="color:var(--primary)">Modo Clássico</h3>
+                <p style="font-size:0.75rem; opacity:0.6; margin-top:4px">Quiz tradicional. Digita a resposta.</p>
+            </div>
+            <div class="choice-card" onclick="Game.setMode('entropy')">
+                <h3 style="color:var(--accent)">Modo Sequência</h3>
+                <p style="font-size:0.75rem; opacity:0.6; margin-top:4px">Toca nas peças na ordem certa.</p>
+            </div>
+        </div>
+
+        <div id="classic-area" class="hidden">
+            <div class="classic-display" id="classic-q">...</div>
+            <input type="number" id="classic-input" class="classic-input" placeholder="?">
+            <button class="btn btn-main" onclick="Game.checkClassic()">CONFIRMAR</button>
+        </div>
+
+        <div id="entropy-area" class="hidden">
+            <div class="slot-container" id="slots-box"></div>
+            <div class="tile-pool" id="tiles-box"></div>
         </div>
     </div>
 
-    <div id="modal-overlay" class="screen hidden" style="background: rgba(0,0,0,0.8); z-index: 100;">
-        <div class="modal-card">
-            <h2 id="modal-title" style="margin:0; opacity: 0.7; font-size: 1rem; letter-spacing: 2px;">SEU TEMPO</h2>
-            <div id="result-value">0ms</div>
-            <p id="modal-msg">Prepare seus dedos...</p>
-            <button class="btn-start" style="width: 100%;" onclick="closeModal()">TENTAR NOVAMENTE</button>
+    <div class="modal" id="modal-level">
+        <div class="modal-content">
+            <h2 style="margin-bottom:20px; font-family:'Space Grotesk'">Dificuldade</h2>
+            <div class="choice-card" onclick="Game.start(1)"><b>Nível 1</b><br><small>2 Vidas | 0 a 20</small></div>
+            <div class="choice-card" onclick="Game.start(2)"><b>Nível 2</b><br><small>4 Vidas | 10 a 50</small></div>
+            <div class="choice-card" onclick="Game.start(3)"><b>Nível 3</b><br><small>5 Vidas | 50 a 1000</small></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-over">
+        <div class="modal-content">
+            <h1 style="color:var(--error); margin-bottom:10px">FIM DE JOGO</h1>
+            <p id="over-msg" style="margin-bottom:30px; opacity:0.7"></p>
+            <button class="btn btn-main" onclick="location.reload()">RECOMEÇAR</button>
         </div>
     </div>
 
     <script>
-        // --- SISTEMA DE SOM (Web Audio API) ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const Game = {
+            mode: 'classic',
+            level: 1,
+            lives: 0,
+            score: 0,
+            questionsDone: 0,
+            timeLeft: 20,
+            timer: null,
+            correctOrder: [],
+            userOrder: [],
+            currentAns: 0,
 
-        function playSound(type) {
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
+            setMode(m) {
+                this.mode = m;
+                document.getElementById('modal-level').classList.add('active');
+            },
 
-            if (type === 'success') {
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(500, audioCtx.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-            } else if (type === 'error') {
-                oscillator.type = 'sawtooth';
-                oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            } else if (type === 'start') {
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            }
-            
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.3);
-        }
+            // NOVA FUNÇÃO: VOLTAR PARA CASA
+            goHome() {
+                clearInterval(this.timer);
+                document.getElementById('game-hud').classList.add('hidden');
+                document.getElementById('classic-area').classList.add('hidden');
+                document.getElementById('entropy-area').classList.add('hidden');
+                document.getElementById('screen-start').classList.remove('hidden');
+                document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            },
 
-        // --- LÓGICA DO JOGO ---
-        const menuScreen = document.getElementById('menu-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const modal = document.getElementById('modal-overlay');
-        const circle = document.getElementById('main-circle');
-        const instruction = document.getElementById('instruction');
-        const highscoreEl = document.getElementById('highscore');
-        const resultValue = document.getElementById('result-value');
-        const modalMsg = document.getElementById('modal-msg');
-        const modalTitle = document.getElementById('modal-title');
-
-        let gameState = 'menu';
-        let startTime;
-        let timeoutId;
-        let highscore = localStorage.getItem('reflexo-score') || 0;
-        highscoreEl.innerText = highscore + 'ms';
-
-        function startGame() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            playSound('start');
-            menuScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            resetRound();
-        }
-
-        function resetRound() {
-            gameState = 'waiting';
-            circle.className = 'game-circle waiting';
-            instruction.innerText = 'AGUARDE...';
-            
-            const waitTime = Math.random() * 3000 + 2000;
-            
-            timeoutId = setTimeout(() => {
-                const isTrap = Math.random() > 0.85; // 15% de chance de pegadinha
+            start(lvl) {
+                this.level = lvl;
+                this.lives = lvl === 1 ? 2 : (lvl === 2 ? 4 : 5);
+                this.score = 0;
+                this.questionsDone = 0;
                 
-                if(isTrap) {
-                    gameState = 'danger';
-                    circle.className = 'game-circle danger';
-                    instruction.innerText = 'NÃO CLIQUE!';
-                    setTimeout(() => { if(gameState === 'danger') resetRound(); }, 1000);
+                document.getElementById('modal-level').classList.remove('active');
+                document.getElementById('screen-start').classList.add('hidden');
+                document.getElementById('game-hud').classList.remove('hidden');
+                this.next();
+            },
+
+            generate() {
+                let min = this.level === 1 ? 0 : (this.level === 2 ? 10 : 50);
+                let max = this.level === 1 ? 20 : (this.level === 2 ? 50 : 1000);
+                max += (this.questionsDone * 4); 
+
+                const rnd = (m, x) => Math.floor(Math.random() * (x - m + 1)) + m;
+                const ops = ['+', '-'];
+                if(this.level > 1) ops.push('*');
+                
+                let eq = [];
+                if(this.level > 1 && Math.random() > 0.4) {
+                    let n1 = rnd(min, max/2);
+                    let op1 = ops[Math.floor(Math.random()*ops.length)];
+                    let n2 = (op1 === '*') ? rnd(2, 10) : rnd(min, max/2);
+                    let op2 = ops[Math.floor(Math.random()*ops.length)];
+                    let n3 = rnd(min, max/2);
+                    let res = eval(`${n1}${op1}${n2}${op2}${n3}`);
+                    eq = [n1.toString(), op1, n2.toString(), op2, n3.toString(), '=', res.toString()];
                 } else {
-                    gameState = 'go';
-                    circle.className = 'game-circle success';
-                    instruction.innerText = 'CLIQUE!';
-                    startTime = performance.now();
+                    let n1 = rnd(min, max);
+                    let op = ops[Math.floor(Math.random()*ops.length)];
+                    let n2 = (op === '*') ? rnd(2, 12) : rnd(min, max);
+                    if(op === '-' && n1 < n2) [n1, n2] = [n2, n1];
+                    let res = eval(`${n1}${op}${n2}`);
+                    eq = [n1.toString(), op, n2.toString(), '=', res.toString()];
                 }
-            }, waitTime);
-        }
+                this.correctOrder = eq;
+                this.currentAns = parseInt(eq[eq.length-1]);
+                return eq;
+            },
 
-        function handleInput(e) {
-            e.preventDefault(); // Evita zoom/scroll no mobile
-
-            if (gameState === 'waiting' || gameState === 'danger') {
-                clearTimeout(timeoutId);
-                playSound('error');
-                showModal(0, true);
-            } 
-            else if (gameState === 'go') {
-                const endTime = performance.now();
-                const reactionTime = Math.round(endTime - startTime);
-                playSound('success');
-
-                if (reactionTime < highscore || highscore == 0) {
-                    highscore = reactionTime;
-                    localStorage.setItem('reflexo-score', highscore);
-                    highscoreEl.innerText = highscore + 'ms';
+            next() {
+                clearInterval(this.timer);
+                this.updateHUD();
+                const eq = this.generate();
+                
+                if(this.mode === 'classic') {
+                    document.getElementById('classic-area').classList.remove('hidden');
+                    document.getElementById('entropy-area').classList.add('hidden');
+                    document.getElementById('classic-q').innerText = eq.slice(0, -1).join(' ').replace(/\*/g, '×');
+                    document.getElementById('classic-input').value = '';
+                    document.getElementById('classic-input').focus();
+                } else {
+                    document.getElementById('classic-area').classList.add('hidden');
+                    document.getElementById('entropy-area').classList.remove('hidden');
+                    this.renderSequence(eq);
                 }
+                this.startTimer();
+            },
+
+            renderSequence(eq) {
+                const slotsBox = document.getElementById('slots-box');
+                const tilesBox = document.getElementById('tiles-box');
+                slotsBox.innerHTML = ''; tilesBox.innerHTML = '';
+                this.userOrder = [];
+
+                eq.forEach(() => {
+                    const s = document.createElement('div');
+                    s.className = 'slot';
+                    slotsBox.appendChild(s);
+                });
+
+                const shuffled = [...eq].sort(() => Math.random() - 0.5);
+                shuffled.forEach(val => {
+                    const t = document.createElement('div');
+                    t.className = 'tile';
+                    t.innerText = val.replace(/\*/g, '×');
+                    t.onclick = () => this.handleTileClick(val, t);
+                    tilesBox.appendChild(t);
+                });
+            },
+
+            handleTileClick(val, tileElement) {
+                const slots = document.querySelectorAll('.slot');
+                const nextSlotIdx = this.userOrder.length;
+
+                if (nextSlotIdx < slots.length) {
+                    this.userOrder.push(val);
+                    const slot = slots[nextSlotIdx];
+                    slot.innerText = val.replace(/\*/g, '×');
+                    slot.classList.add('filled');
+                    tileElement.style.visibility = 'hidden';
+
+                    if (this.userOrder.length === slots.length) this.checkSequence();
+                }
+            },
+
+            checkSequence() {
+                let isMathCorrect = false;
+                try {
+                    const str = this.userOrder.join('').replace('=', '==');
+                    isMathCorrect = eval(str);
+                } catch(e) { isMathCorrect = false; }
+
+                if (isMathCorrect) this.success();
+                else this.resetSequence();
+            },
+
+            resetSequence() {
+                document.querySelectorAll('.slot').forEach(s => {
+                    s.classList.add('wrong');
+                    setTimeout(() => { s.innerText = ''; s.classList.remove('filled', 'wrong'); }, 500);
+                });
+                setTimeout(() => {
+                    this.userOrder = [];
+                    document.querySelectorAll('.tile').forEach(t => t.style.visibility = 'visible');
+                }, 500);
+            },
+
+            checkClassic() {
+                const val = parseInt(document.getElementById('classic-input').value);
+                if(val === this.currentAns) this.success();
+                else this.wrong();
+            },
+
+            success() {
+                clearInterval(this.timer);
+                this.score += (this.level * 10);
+                this.questionsDone++;
+                if(this.mode === 'entropy') document.querySelectorAll('.slot').forEach(s => s.classList.add('correct'));
                 
-                showModal(reactionTime);
-                gameState = 'result';
-            }
-        }
+                document.body.style.background = "#051";
+                setTimeout(() => { document.body.style.background = varColor('--bg'); this.next(); }, 600);
+            },
 
-        circle.addEventListener('mousedown', handleInput);
-        circle.addEventListener('touchstart', handleInput);
+            wrong() {
+                this.lives--;
+                this.updateHUD();
+                document.body.style.background = "#400";
+                setTimeout(() => document.body.style.background = varColor('--bg'), 400);
+                if(this.lives <= 0) this.gameOver();
+                else this.next();
+            },
 
-        function showModal(time, isEarly = false) {
-            modal.classList.remove('hidden');
-            if (isEarly) {
-                modalTitle.innerText = "OPS...";
-                resultValue.innerText = "CEDO!";
-                resultValue.style.color = "var(--danger)";
-                modalMsg.innerText = "Você clicou antes da hora.";
-            } else {
-                modalTitle.innerText = "REACTION TIME";
-                resultValue.innerText = time + "ms";
-                resultValue.style.color = "var(--success)";
-                
-                if(time < 200) modalMsg.innerText = "VELOCIDADE DE ELITE! 🔥";
-                else if(time < 300) modalMsg.innerText = "Muito bom, Relâmpago! ⚡";
-                else modalMsg.innerText = "Dá para ser mais rápido! ⏱️";
-            }
-        }
+            startTimer() {
+                this.timeLeft = 20;
+                const fill = document.getElementById('timer-fill');
+                fill.style.transition = 'none'; fill.style.width = '100%';
+                setTimeout(() => { fill.style.transition = 'width 20s linear'; fill.style.width = '0%'; }, 50);
+                this.timer = setInterval(() => { this.timeLeft--; if(this.timeLeft <= 0) this.wrong(); }, 1000);
+            },
 
-        function closeModal() {
-            playSound('start');
-            modal.classList.add('hidden');
-            resetRound();
-        }
+            updateHUD() {
+                document.getElementById('ui-lvl').innerText = this.level;
+                document.getElementById('ui-score').innerText = this.score;
+                let h = ""; for(let i=0; i<this.lives; i++) h += "❤️";
+                document.getElementById('ui-lives').innerText = h;
+            },
 
-        // Impede o botão direito
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123 ||
-                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
-                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
-                return false;
+            gameOver() {
+                clearInterval(this.timer);
+                document.getElementById('modal-over').classList.add('active');
+                document.getElementById('over-msg').innerText = `PONTOS: ${this.score}`;
             }
         };
+
+        function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
+        document.getElementById('classic-input').onkeypress = (e) => { if(e.key === 'Enter') Game.checkClassic(); };
     </script>
 </body>
 </html>
