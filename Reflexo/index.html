@@ -127,9 +127,9 @@
     <div class="modal" id="modal-level">
         <div class="modal-content">
             <h2 style="margin-bottom:20px; font-family:'Space Grotesk'">Dificuldade</h2>
-            <div class="choice-card" onclick="Game.start(1)"><b>Nível 1</b><br><small>2 Vidas | 0 a 20</small></div>
-            <div class="choice-card" onclick="Game.start(2)"><b>Nível 2</b><br><small>4 Vidas | 10 a 50</small></div>
-            <div class="choice-card" onclick="Game.start(3)"><b>Nível 3</b><br><small>5 Vidas | 50 a 1000</small></div>
+            <div class="choice-card" onclick="Game.start(1)"><b>Nível 1</b><br><small>2 Vidas | 0-50 | + e -</small></div>
+            <div class="choice-card" onclick="Game.start(2)"><b>Nível 2</b><br><small>4 Vidas | 0-50 | Mix de Operações</small></div>
+            <div class="choice-card" onclick="Game.start(3)"><b>Nível 3</b><br><small>5 Vidas | 0-50 | Alta Complexidade</small></div>
         </div>
     </div>
 
@@ -159,7 +159,6 @@
                 document.getElementById('modal-level').classList.add('active');
             },
 
-            // NOVA FUNÇÃO: VOLTAR PARA CASA
             goHome() {
                 clearInterval(this.timer);
                 document.getElementById('game-hud').classList.add('hidden');
@@ -182,31 +181,46 @@
             },
 
             generate() {
-                let min = this.level === 1 ? 0 : (this.level === 2 ? 10 : 50);
-                let max = this.level === 1 ? 20 : (this.level === 2 ? 50 : 1000);
-                max += (this.questionsDone * 4); 
-
+                // Agora os números são sempre de 0 a 50 como solicitado
+                const min = 0;
+                const max = 50; 
                 const rnd = (m, x) => Math.floor(Math.random() * (x - m + 1)) + m;
-                const ops = ['+', '-'];
-                if(this.level > 1) ops.push('*');
+                
+                let ops = ['+', '-'];
+                if(this.level >= 2) ops.push('*');
                 
                 let eq = [];
-                if(this.level > 1 && Math.random() > 0.4) {
-                    let n1 = rnd(min, max/2);
+                
+                // Lógica de Complexidade
+                // Nível 1 tem 20% de chance de vir com 2 operações (3 termos)
+                // Nível 2 tem 50% e Nível 3 tem 90%
+                let chanceOfThreeTerms = this.level === 1 ? 0.2 : (this.level === 2 ? 0.5 : 0.9);
+
+                if(Math.random() < chanceOfThreeTerms) {
+                    // CONTA COM 2 OPERAÇÕES (Ex: 7 - 9 + 2)
+                    let n1 = rnd(min, max);
                     let op1 = ops[Math.floor(Math.random()*ops.length)];
-                    let n2 = (op1 === '*') ? rnd(2, 10) : rnd(min, max/2);
+                    let n2 = (op1 === '*') ? rnd(1, 10) : rnd(min, max);
                     let op2 = ops[Math.floor(Math.random()*ops.length)];
-                    let n3 = rnd(min, max/2);
+                    let n3 = (op2 === '*') ? rnd(1, 5) : rnd(min, max);
+
+                    // Garantir que não temos números negativos loucos para crianças
                     let res = eval(`${n1}${op1}${n2}${op2}${n3}`);
+                    if(res < 0) return this.generate(); // Tenta gerar outra se for negativa
+
                     eq = [n1.toString(), op1, n2.toString(), op2, n3.toString(), '=', res.toString()];
                 } else {
+                    // CONTA NORMAL (Ex: 8 + 5)
                     let n1 = rnd(min, max);
                     let op = ops[Math.floor(Math.random()*ops.length)];
-                    let n2 = (op === '*') ? rnd(2, 12) : rnd(min, max);
+                    let n2 = (op === '*') ? rnd(1, 10) : rnd(min, max);
+                    
                     if(op === '-' && n1 < n2) [n1, n2] = [n2, n1];
+                    
                     let res = eval(`${n1}${op}${n2}`);
                     eq = [n1.toString(), op, n2.toString(), '=', res.toString()];
                 }
+
                 this.correctOrder = eq;
                 this.currentAns = parseInt(eq[eq.length-1]);
                 return eq;
@@ -341,7 +355,6 @@
         document.getElementById('classic-input').onkeypress = (e) => { if(e.key === 'Enter') Game.checkClassic(); };
         document.addEventListener('contextmenu', event => event.preventDefault());
 
-        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
         document.onkeydown = function(e) {
             if (e.keyCode == 123 ||
                 (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
