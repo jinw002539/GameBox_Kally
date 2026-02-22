@@ -338,6 +338,16 @@
 
         function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
         document.getElementById('classic-input').onkeypress = (e) => { if(e.key === 'Enter') Game.checkClassic(); };
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
     </script>
 </body>
 </html>
