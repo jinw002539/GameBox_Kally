@@ -4,7 +4,7 @@
     <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mestre das Capitais PRO</title>
+    <title>Mestre das Capitais</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -113,77 +113,77 @@
         const sndOk = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
         const sndNo = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
 
-        // BANCO DE DADOS (Expandido)
-            const db = [
-    {p: "Afeganistão", c: "Cabul"}, {p: "Albânia", c: "Tirana"}, {p: "Alemanha", c: "Berlim"},
-    {p: "Andorra", c: "Andorra-a-Velha"}, {p: "Angola", c: "Luanda"}, {p: "Antiga e Barbuda", c: "Saint John's"},
-    {p: "Arábia Saudita", c: "Riade"}, {p: "Argélia", c: "Argel"}, {p: "Argentina", c: "Buenos Aires"},
-    {p: "Arménia", c: "Erevan"}, {p: "Austrália", c: "Camberra"}, {p: "Áustria", c: "Viena"},
-    {p: "Azerbaijão", c: "Bacu"}, {p: "Bahamas", c: "Nassau"}, {p: "Bangladexe", c: "Daca"},
-    {p: "Barbados", c: "Bridgetown"}, {p: "Barém", c: "Manama"}, {p: "Bélgica", c: "Bruxelas"},
-    {p: "Belize", c: "Belmopã"}, {p: "Benim", c: "Porto Novo"}, {p: "Bielorrússia", c: "Minsque"},
-    {p: "Bolívia", c: "Sucre"}, {p: "Bósnia e Herzegovina", c: "Saraievo"}, {p: "Botsuana", c: "Gaborone"},
-    {p: "Brasil", c: "Brasília"}, {p: "Brunei", c: "Bandar Seri Begauã"}, {p: "Bulgária", c: "Sófia"},
-    {p: "Burquina Faso", c: "Uagadugu"}, {p: "Burundi", c: "Guitega"}, {p: "Butão", c: "Timfu"},
-    {p: "Cabo Verde", c: "Praia"}, {p: "Camarões", c: "Iaundé"}, {p: "Camboja", c: "Pnom Pene"},
-    {p: "Canadá", c: "Otava"}, {p: "Catar", c: "Doa"}, {p: "Cazaquistão", c: "Astana"},
-    {p: "Chade", c: "Jamena"}, {p: "Chéquia", c: "Praga"}, {p: "Chile", c: "Santiago"},
-    {p: "China", c: "Pequim"}, {p: "Chipre", c: "Nicósia"}, {p: "Colômbia", c: "Bogotá"},
-    {p: "Comores", c: "Moroni"}, {p: "Congo-Brazzaville", c: "Brazzaville"}, {p: "Coreia do Norte", c: "Pionguiangue"},
-    {p: "Coreia do Sul", c: "Seul"}, {p: "Costa do Marfim", c: "Iamussucro"}, {p: "Costa Rica", c: "San José"},
-    {p: "Croácia", c: "Zagrebe"}, {p: "Cuba", c: "Havana"}, {p: "Dinamarca", c: "Copenhaga"},
-    {p: "Dominica", c: "Roseau"}, {p: "Egito", c: "Cairo"}, {p: "Emirados Árabes Unidos", c: "Abu Dhabi"},
-    {p: "Equador", c: "Quito"}, {p: "Eritreia", c: "Asmara"}, {p: "Eslováquia", c: "Bratislava"},
-    {p: "Eslovénia", c: "Liubliana"}, {p: "Espanha", c: "Madrid"}, {p: "Essuatíni", c: "Mbabane"},
-    {p: "Estados Unidos", c: "Washington, D.C."}, {p: "Estónia", c: "Talim"}, {p: "Etiópia", c: "Adis Abeba"},
-    {p: "Fiji", c: "Suva"}, {p: "Filipinas", c: "Manila"}, {p: "Finlândia", c: "Helsínquia"},
-    {p: "França", c: "Paris"}, {p: "Gabão", c: "Libreville"}, {p: "Gâmbia", c: "Banjul"},
-    {p: "Gana", c: "Acra"}, {p: "Geórgia", c: "Tbilissi"}, {p: "Granada", c: "Saint George's"},
-    {p: "Grécia", c: "Atenas"}, {p: "Guatemala", c: "Cidade de Guatemala"}, {p: "Guiana", c: "Georgetown"},
-    {p: "Guiné", c: "Conacri"}, {p: "Guiné Equatorial", c: "Malabo"}, {p: "Guiné-Bissau", c: "Bissau"},
-    {p: "Haiti", c: "Porto do Príncipe"}, {p: "Honduras", c: "Tegucigalpa"}, {p: "Hungria", c: "Budapeste"},
-    {p: "Iémen", c: "Saná"}, {p: "Ilhas Marechal", c: "Majuro"}, {p: "Ilhas Salomão", c: "Honiara"},
-    {p: "Índia", c: "Nova Deli"}, {p: "Indonésia", c: "Jacarta"}, {p: "Irão", c: "Teerão"},
-    {p: "Iraque", c: "Bagdade"}, {p: "Irlanda", c: "Dublim"}, {p: "Islândia", c: "Reiquiavique"},
-    {p: "Israel", c: "Jerusalém"}, {p: "Itália", c: "Roma"}, {p: "Jamaica", c: "Kingston"},
-    {p: "Japão", c: "Tóquio"}, {p: "Jibuti", c: "Jibuti"}, {p: "Jordânia", c: "Amã"},
-    {p: "Laos", c: "Vientiane"}, {p: "Lesoto", c: "Maseru"}, {p: "Letónia", c: "Riga"},
-    {p: "Líbano", c: "Beirute"}, {p: "Libéria", c: "Monróvia"}, {p: "Líbia", c: "Trípoli"},
-    {p: "Listenstaine", c: "Vaduz"}, {p: "Lituânia", c: "Vílnius"}, {p: "Luxemburgo", c: "Luxemburgo"},
-    {p: "Macedónia do Norte", c: "Escópia"}, {p: "Madagáscar", c: "Antananarivo"}, {p: "Malásia", c: "Cuala Lumpur"},
-    {p: "Maláui", c: "Lilôngue"}, {p: "Maldivas", c: "Malé"}, {p: "Mali", c: "Bamaco"},
-    {p: "Malta", c: "Valeta"}, {p: "Marrocos", c: "Rebate"}, {p: "Maurícia", c: "Porto Luís"},
-    {p: "Mauritânia", c: "Nuaquechote"}, {p: "México", c: "Cidade do México"}, {p: "Mianmar", c: "Nepidó"},
-    {p: "Micronésia", c: "Paliquir"}, {p: "Moçambique", c: "Maputo"}, {p: "Moldávia", c: "Quixinau"},
-    {p: "Mónaco", c: "Mónaco"}, {p: "Mongólia", c: "Ulã Bator"}, {p: "Montenegro", c: "Podgoritsa"},
-    {p: "Namíbia", c: "Vinduque"}, {p: "Nauru", c: "Iarem"}, {p: "Nepal", c: "Catmandu"},
-    {p: "Nicarágua", c: "Manágua"}, {p: "Níger", c: "Niamei"}, {p: "Nigéria", c: "Abuja"},
-    {p: "Noruega", c: "Oslo"}, {p: "Nova Zelândia", c: "Wellington"}, {p: "Omã", c: "Mascate"},
-    {p: "Países Baixos", c: "Amesterdão"}, {p: "Palau", c: "Ngerulmud"}, {p: "Panamá", c: "Cidade do Panamá"},
-    {p: "Papua Nova Guiné", c: "Porto Moresby"}, {p: "Paquistão", c: "Islamabade"}, {p: "Paraguai", c: "Assunção"},
-    {p: "Peru", c: "Lima"}, {p: "Polónia", c: "Varsóvia"}, {p: "Portugal", c: "Lisboa"},
-    {p: "Quénia", c: "Nairobi"}, {p: "Quirguistão", c: "Bisqueque"}, {p: "Quiribáti", c: "Taraua do Sul"},
-    {p: "Reino Unido", c: "Londres"}, {p: "República Centro-Africana", c: "Bangui"}, {p: "República Democrática do Congo", c: "Quinxassa"},
-    {p: "República Dominicana", c: "Santo Domingo"}, {p: "Roménia", c: "Bucareste"}, {p: "Ruanda", c: "Quigali"},
-    {p: "Rússia", c: "Moscovo"}, {p: "Samoa", c: "Apia"}, {p: "Santa Lúcia", c: "Castries"},
-    {p: "São Cristóvão e Neves", c: "Basseterre"}, {p: "São Marinho", c: "São Marinho"}, {p: "São Tomé e Príncipe", c: "São Tomé"},
-    {p: "São Vicente e Granadinas", c: "Kingstown"}, {p: "Seicheles", c: "Vitória"}, {p: "Senegal", c: "Dacar"},
-    {p: "Serra Leoa", c: "Freetown"}, {p: "Sérvia", c: "Belgrado"}, {p: "Singapura", c: "Singapura"},
-    {p: "Síria", c: "Damasco"}, {p: "Somália", c: "Mogadíscio"}, {p: "Sri Lanca", c: "Sri Jaiavardenapura-Cota"},
-    {p: "Sudão", c: "Cartum"}, {p: "Sudão do Sul", c: "Juba"}, {p: "Suécia", c: "Estocolmo"},
-    {p: "Suíça", c: "Berna"}, {p: "Suriname", c: "Paramaribo"}, {p: "Tailândia", c: "Banguecoque"},
-    {p: "Tajiquistão", c: "Duchambé"}, {p: "Tanzânia", c: "Dodoma"}, {p: "Timor-Leste", c: "Díli"},
-    {p: "Togo", c: "Lomé"}, {p: "Tonga", c: "Nacuolofa"}, {p: "Trindade e Tobago", c: "Porto de Espanha"},
-    {p: "Tunísia", c: "Tunes"}, {p: "Turquemenistão", c: "Asgabate"}, {p: "Turquia", c: "Ancara"},
-    {p: "Tuvalu", c: "Funafuti"}, {p: "Ucrânia", c: "Quieve"}, {p: "Uganda", c: "Campala"},
-    {p: "Uruguai", c: "Montevideu"}, {p: "Usbequistão", c: "Tasquente"}, {p: "Vanuatu", c: "Porto Vila"},
-    {p: "Venezuela", c: "Caracas"}, {p: "Vietname", c: "Hanói"}, {p: "Zâmbia", c: "Lusaca"},
-    {p: "Zimbábue", c: "Harare"}
-];
+        // BANCO DE DADOS
+        const db = [
+            {p: "Afeganistão", c: "Cabul"}, {p: "Albânia", c: "Tirana"}, {p: "Alemanha", c: "Berlim"},
+            {p: "Andorra", c: "Andorra-a-Velha"}, {p: "Angola", c: "Luanda"}, {p: "Antiga e Barbuda", c: "Saint John's"},
+            {p: "Arábia Saudita", c: "Riade"}, {p: "Argélia", c: "Argel"}, {p: "Argentina", c: "Buenos Aires"},
+            {p: "Arménia", c: "Erevan"}, {p: "Austrália", c: "Camberra"}, {p: "Áustria", c: "Viena"},
+            {p: "Azerbaijão", c: "Bacu"}, {p: "Bahamas", c: "Nassau"}, {p: "Bangladexe", c: "Daca"},
+            {p: "Barbados", c: "Bridgetown"}, {p: "Barém", c: "Manama"}, {p: "Bélgica", c: "Bruxelas"},
+            {p: "Belize", c: "Belmopã"}, {p: "Benim", c: "Porto Novo"}, {p: "Bielorrússia", c: "Minsque"},
+            {p: "Bolívia", c: "Sucre"}, {p: "Bósnia e Herzegovina", c: "Saraievo"}, {p: "Botsuana", c: "Gaborone"},
+            {p: "Brasil", c: "Brasília"}, {p: "Brunei", c: "Bandar Seri Begauã"}, {p: "Bulgária", c: "Sófia"},
+            {p: "Burquina Faso", c: "Uagadugu"}, {p: "Burundi", c: "Guitega"}, {p: "Butão", c: "Timfu"},
+            {p: "Cabo Verde", c: "Praia"}, {p: "Camarões", c: "Iaundé"}, {p: "Camboja", c: "Pnom Pene"},
+            {p: "Canadá", c: "Otava"}, {p: "Catar", c: "Doa"}, {p: "Cazaquistão", c: "Astana"},
+            {p: "Chade", c: "Jamena"}, {p: "Chéquia", c: "Praga"}, {p: "Chile", c: "Santiago"},
+            {p: "China", c: "Pequim"}, {p: "Chipre", c: "Nicósia"}, {p: "Colômbia", c: "Bogotá"},
+            {p: "Comores", c: "Moroni"}, {p: "Congo-Brazzaville", c: "Brazzaville"}, {p: "Coreia do Norte", c: "Pionguiangue"},
+            {p: "Coreia do Sul", c: "Seul"}, {p: "Costa do Marfim", c: "Iamussucro"}, {p: "Costa Rica", c: "San José"},
+            {p: "Croácia", c: "Zagrebe"}, {p: "Cuba", c: "Havana"}, {p: "Dinamarca", c: "Copenhaga"},
+            {p: "Dominica", c: "Roseau"}, {p: "Egito", c: "Cairo"}, {p: "Emirados Árabes Unidos", c: "Abu Dhabi"},
+            {p: "Equador", c: "Quito"}, {p: "Eritreia", c: "Asmara"}, {p: "Eslováquia", c: "Bratislava"},
+            {p: "Eslovénia", c: "Liubliana"}, {p: "Espanha", c: "Madrid"}, {p: "Essuatíni", c: "Mbabane"},
+            {p: "Estados Unidos", c: "Washington, D.C."}, {p: "Estónia", c: "Talim"}, {p: "Etiópia", c: "Adis Abeba"},
+            {p: "Fiji", c: "Suva"}, {p: "Filipinas", c: "Manila"}, {p: "Finlândia", c: "Helsínquia"},
+            {p: "França", c: "Paris"}, {p: "Gabão", c: "Libreville"}, {p: "Gâmbia", c: "Banjul"},
+            {p: "Gana", c: "Acra"}, {p: "Geórgia", c: "Tbilissi"}, {p: "Granada", c: "Saint George's"},
+            {p: "Grécia", c: "Atenas"}, {p: "Guatemala", c: "Cidade de Guatemala"}, {p: "Guiana", c: "Georgetown"},
+            {p: "Guiné", c: "Conacri"}, {p: "Guiné Equatorial", c: "Malabo"}, {p: "Guiné-Bissau", c: "Bissau"},
+            {p: "Haiti", c: "Porto do Príncipe"}, {p: "Honduras", c: "Tegucigalpa"}, {p: "Hungria", c: "Budapeste"},
+            {p: "Iémen", c: "Saná"}, {p: "Ilhas Marechal", c: "Majuro"}, {p: "Ilhas Salomão", c: "Honiara"},
+            {p: "Índia", c: "Nova Deli"}, {p: "Indonésia", c: "Jacarta"}, {p: "Irão", c: "Teerão"},
+            {p: "Iraque", c: "Bagdade"}, {p: "Irlanda", c: "Dublim"}, {p: "Islândia", c: "Reiquiavique"},
+            {p: "Israel", c: "Jerusalém"}, {p: "Itália", c: "Roma"}, {p: "Jamaica", c: "Kingston"},
+            {p: "Japão", c: "Tóquio"}, {p: "Jibuti", c: "Jibuti"}, {p: "Jordânia", c: "Amã"},
+            {p: "Laos", c: "Vientiane"}, {p: "Lesoto", c: "Maseru"}, {p: "Letónia", c: "Riga"},
+            {p: "Líbano", c: "Beirute"}, {p: "Libéria", c: "Monróvia"}, {p: "Líbia", c: "Trípoli"},
+            {p: "Listenstaine", c: "Vaduz"}, {p: "Lituânia", c: "Vílnius"}, {p: "Luxemburgo", c: "Luxemburgo"},
+            {p: "Macedónia do Norte", c: "Escópia"}, {p: "Madagáscar", c: "Antananarivo"}, {p: "Malásia", c: "Cuala Lumpur"},
+            {p: "Maláui", c: "Lilôngue"}, {p: "Maldivas", c: "Malé"}, {p: "Mali", c: "Bamaco"},
+            {p: "Malta", c: "Valeta"}, {p: "Marrocos", c: "Rebate"}, {p: "Maurícia", c: "Porto Luís"},
+            {p: "Mauritânia", c: "Nuaquechote"}, {p: "México", c: "Cidade do México"}, {p: "Mianmar", c: "Nepidó"},
+            {p: "Micronésia", c: "Paliquir"}, {p: "Moçambique", c: "Maputo"}, {p: "Moldávia", c: "Quixinau"},
+            {p: "Mónaco", c: "Mónaco"}, {p: "Mongólia", c: "Ulã Bator"}, {p: "Montenegro", c: "Podgoritsa"},
+            {p: "Namíbia", c: "Vinduque"}, {p: "Nauru", c: "Iarem"}, {p: "Nepal", c: "Catmandu"},
+            {p: "Nicarágua", c: "Manágua"}, {p: "Níger", c: "Niamei"}, {p: "Nigéria", c: "Abuja"},
+            {p: "Noruega", c: "Oslo"}, {p: "Nova Zelândia", c: "Wellington"}, {p: "Omã", c: "Mascate"},
+            {p: "Países Baixos", c: "Amesterdão"}, {p: "Palau", c: "Ngerulmud"}, {p: "Panamá", c: "Cidade do Panamá"},
+            {p: "Papua Nova Guiné", c: "Porto Moresby"}, {p: "Paquistão", c: "Islamabade"}, {p: "Paraguai", c: "Assunção"},
+            {p: "Peru", c: "Lima"}, {p: "Polónia", c: "Varsóvia"}, {p: "Portugal", c: "Lisboa"},
+            {p: "Quénia", c: "Nairobi"}, {p: "Quirguistão", c: "Bisqueque"}, {p: "Quiribáti", c: "Taraua do Sul"},
+            {p: "Reino Unido", c: "Londres"}, {p: "República Centro-Africana", c: "Bangui"}, {p: "República Democrática do Congo", c: "Quinxassa"},
+            {p: "República Dominicana", c: "Santo Domingo"}, {p: "Roménia", c: "Bucareste"}, {p: "Ruanda", c: "Quigali"},
+            {p: "Rússia", c: "Moscovo"}, {p: "Samoa", c: "Apia"}, {p: "Santa Lúcia", c: "Castries"},
+            {p: "São Cristóvão e Neves", c: "Basseterre"}, {p: "São Marinho", c: "São Marinho"}, {p: "São Tomé e Príncipe", c: "São Tomé"},
+            {p: "São Vicente e Granadinas", c: "Kingstown"}, {p: "Seicheles", c: "Vitória"}, {p: "Senegal", c: "Dacar"},
+            {p: "Serra Leoa", c: "Freetown"}, {p: "Sérvia", c: "Belgrado"}, {p: "Singapura", c: "Singapura"},
+            {p: "Síria", c: "Damasco"}, {p: "Somália", c: "Mogadíscio"}, {p: "Sri Lanca", c: "Sri Jaiavardenapura-Cota"},
+            {p: "Sudão", c: "Cartum"}, {p: "Sudão do Sul", c: "Juba"}, {p: "Suécia", c: "Estocolmo"},
+            {p: "Suíça", c: "Berna"}, {p: "Suriname", c: "Paramaribo"}, {p: "Tailândia", c: "Banguecoque"},
+            {p: "Tajiquistão", c: "Duchambé"}, {p: "Tanzânia", c: "Dodoma"}, {p: "Timor-Leste", c: "Díli"},
+            {p: "Togo", c: "Lomé"}, {p: "Tonga", c: "Nacuolofa"}, {p: "Trindade e Tobago", c: "Porto de Espanha"},
+            {p: "Tunísia", c: "Tunes"}, {p: "Turquemenistão", c: "Asgabate"}, {p: "Turquia", c: "Ancara"},
+            {p: "Tuvalu", c: "Funafuti"}, {p: "Ucrânia", c: "Quieve"}, {p: "Uganda", c: "Campala"},
+            {p: "Uruguai", c: "Montevideu"}, {p: "Usbequistão", c: "Tasquente"}, {p: "Vanuatu", c: "Porto Vila"},
+            {p: "Venezuela", c: "Caracas"}, {p: "Vietname", c: "Hanói"}, {p: "Zâmbia", c: "Lusaca"},
+            {p: "Zimbábue", c: "Harare"}
+        ];
+
         let state = { totalStars: 0, levels: {}, current: 1, qArray: [], qIdx: 0, score: 0, log: [] };
         let timer, timeLeft = 30;
 
-        // LOAD / SAVE
         if(localStorage.getItem('cap_game_pro')) {
             state = JSON.parse(localStorage.getItem('cap_game_pro'));
         }
@@ -292,8 +292,21 @@
 
         function finish() {
             const tot = state.qArray.length;
-            const pct = (state.score / tot) * 100;
-            const stars = (pct === 100) ? 3 : (pct >= 70) ? 2 : (pct >= 40) ? 1 : 0;
+            const acertos = state.score;
+            let stars = 0;
+
+            // Lógica de Estrelas: 1 por 1 nos níveis curtos, proporcional nos longos
+            if (tot === 3) {
+                // Para níveis de 3 perguntas: cada acerto é 1 estrela
+                stars = acertos; 
+            } else {
+                // Para níveis de 8 ou 10 perguntas
+                const pct = (acertos / tot) * 100;
+                if (pct === 100) stars = 3;
+                else if (pct >= 70) stars = 2; // Ex: 6/8 ou 7/10 acertos
+                else if (pct >= 40) stars = 1; // Ex: 4/10 acertos
+                else stars = 0;
+            }
             
             const prev = state.levels[state.current] || 0;
             if(stars > prev) {
