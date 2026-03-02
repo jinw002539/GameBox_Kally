@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Jogo da Forca</title>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DotGothic16&display=swap");
+
+      :root {
+        --primary-color: #1f2f61;
+        --secondary-color: #224ca4;
+        --light-color: #a7c2da;
+        --pixel-border: 4px solid #fff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: var(--primary-color);
+        color: var(--light-color);
+        font-family: "DotGothic16", sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+
+      /* --- TELA INICIAL PIXEL --- */
+      #start-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--primary-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .pixel-card {
+        border: var(--pixel-border);
+        padding: 40px;
+        background: var(--secondary-color);
+        text-align: center;
+        box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.4);
+        position: relative;
+        max-width: 90%;
+      }
+
+      .btn-pixel {
+        cursor: pointer;
+        background-color: var(--light-color);
+        color: var(--primary-color);
+        border: 4px solid #000;
+        padding: 12px 25px;
+        margin: 10px;
+        font-family: inherit;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+      }
+
+      /* --- REGRAS LATERAL --- */
+      #rules-panel {
+        position: absolute;
+        left: 105%; top: 0;
+        width: 260px;
+        background: #000;
+        border: 2px solid var(--light-color);
+        padding: 20px;
+        text-align: left;
+        display: none;
+        box-shadow: 5px 5px 0px var(--secondary-color);
+      }
+
+      /* --- RESPONSIVIDADE (MOBILE) --- */
+      @media (max-width: 850px) {
+        #rules-panel {
+          position: fixed;
+          left: 50%; top: 50%;
+          transform: translate(-50%, -50%);
+          width: 85%;
+          z-index: 1001;
+        }
+
+        .game-container {
+          width: 100% !important;
+          height: auto !important;
+          padding: 10px !important;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .figure-container {
+          width: 160px;
+          height: 200px;
+        }
+
+        .word {
+          position: relative !important;
+          bottom: 0 !important;
+          margin-top: 30px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .letter {
+          font-size: 24px !important;
+          width: 20px !important;
+          height: 40px !important;
+        }
+
+        .wrong-letters-container {
+          position: static !important;
+          text-align: center !important;
+          margin-top: 20px;
+        }
+
+        h1 { font-size: 1.5rem; letter-spacing: 0.2rem; }
+      }
+
+      /* --- ESTILOS ORIGINAIS --- */
+      h1 { margin: 20px 0 0; letter-spacing: 0.5rem; text-transform: uppercase; }
+      
+      .game-container {
+        padding: 20px 30px;
+        position: relative;
+        margin: auto;
+        height: 350px;
+        width: 450px;
+      }
+
+      .figure-container {
+        fill: transparent;
+        stroke: var(--light-color);
+        stroke-width: 4px;
+        stroke-linecap: round;
+      }
+
+      .figure-part { display: none; }
+
+      .wrong-letters-container {
+        position: absolute;
+        top: 20px; right: 20px;
+        display: flex; flex-direction: column;
+        text-align: right;
+      }
+
+      .word {
+        display: flex;
+        position: absolute;
+        bottom: 10px; left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .letter {
+        border-bottom: 3px solid var(--secondary-color);
+        display: inline-flex;
+        font-size: 30px;
+        align-items: center;
+        justify-content: center;
+        margin: 0 3px;
+        height: 50px;
+        width: 25px;
+      }
+
+      .popup-container {
+        background-color: rgba(0, 0, 0, 0.7);
+        position: fixed;
+        top: 0; bottom: 0; left: 0; right: 0;
+        display: none; align-items: center; justify-content: center;
+        z-index: 2000;
+      }
+
+      .popup {
+        background-color: var(--secondary-color);
+        border: var(--pixel-border);
+        padding: 30px;
+        text-align: center;
+      }
+
+      .notification-container {
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 15px 20px;
+        position: fixed;
+        bottom: -60px;
+        transition: transform 0.3s ease-in-out;
+      }
+
+      .notification-container.show { transform: translateY(-80px); }
+
+      #mobile-input {
+        position: absolute;
+        top: -100px;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="start-screen">
+      <div class="pixel-card">
+        <h1>FORCA PIXEL</h1>
+        <button class="btn-pixel" onclick="startGame()">Começar</button>
+        <button class="btn-pixel" onclick="toggleRules()">Regras</button>
+
+        <div id="rules-panel">
+          <h3>REGRAS:</h3>
+          <p>- Tenta adivinhar a palavra secreta.</p>
+          <p>- No telemóvel, clica no ecrã para abrir o teclado.</p>
+          <p>- Se errares, o boneco aparece.</p>
+          <p>- Não deixes o boneco completar!</p>
+          <button class="btn-pixel" style="font-size: 0.8rem;" onclick="toggleRules()">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <input type="text" id="mobile-input" autocomplete="off" />
+
+    <h1>Jogo da Forca</h1>
+    <p>Digita uma letra no teclado</p>
+
+    <div class="game-container">
+      <svg height="250" width="200" class="figure-container">
+        <line x1="60" y1="20" x2="140" y2="20" />
+        <line x1="140" y1="20" x2="140" y2="50" />
+        <line x1="60" y1="20" x2="60" y2="230" />
+        <line x1="20" y1="230" x2="100" y2="230" />
+        <circle cx="140" cy="70" r="20" class="figure-part" />
+        <line x1="140" y1="90" x2="140" y2="150" class="figure-part" />
+        <line x1="140" y1="120" x2="120" y2="100" class="figure-part" />
+        <line x1="140" y1="120" x2="160" y2="100" class="figure-part" />
+        <line x1="140" y1="150" x2="120" y2="180" class="figure-part" />
+        <line x1="140" y1="150" x2="160" y2="180" class="figure-part" />
+      </svg>
+
+      <div class="wrong-letters-container">
+        <div id="wrong-letters"></div>
+      </div>
+
+      <div class="word" id="word"></div>
+    </div>
+
+    <div class="popup-container" id="popup-container">
+      <div class="popup">
+        <h2 id="final-message"></h2>
+        <h3 id="final-message-reveal-word"></h3>
+        <button class="btn-pixel" id="play-button">Jogar Novamente</button>
+      </div>
+    </div>
+
+    <div class="notification-container" id="notification-container">
+      <p>Já inseriste esta letra!</p>
+    </div>
+
+    <script>
+      const wordElement = document.getElementById("word");
+      const wrongLettersElement = document.getElementById("wrong-letters");
+      const playAgainButton = document.getElementById("play-button");
+      const popup = document.getElementById("popup-container");
+      const notification = document.getElementById("notification-container");
+      const finalMessage = document.getElementById("final-message");
+      const finalMessageRevealWord = document.getElementById("final-message-reveal-word");
+      const figureParts = document.querySelectorAll(".figure-part");
+      const mobileInput = document.getElementById("mobile-input");
+
+      const words = ["computador", "tecnologia", "programacao", "interface", "algoritmo", "variavel", "servidor", "internet", "projeto", "desenvolvimento", "codigo", "sistema"];
+      let selectedWord = words[Math.floor(Math.random() * words.length)];
+      let playable = false;
+      const correctLetters = [];
+      const wrongLetters = [];
+
+      function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        playable = true;
+        mobileInput.focus();
+        displayWord();
+      }
+
+      function toggleRules() {
+        const panel = document.getElementById('rules-panel');
+        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+      }
+
+      function displayWord() {
+        wordElement.innerHTML = `
+          ${selectedWord.split("").map(letter => `
+            <span class="letter">
+              ${correctLetters.includes(letter) ? letter : ""}
+            </span>
+          `).join("")}
+        `;
+        const innerWord = wordElement.innerText.replace(/\n/g, "");
+        if (innerWord === selectedWord) {
+          finalMessage.innerText = "Parabéns! Venceste! 😃";
+          finalMessageRevealWord.innerText = "";
+          popup.style.display = "flex";
+          playable = false;
+        }
+      }
+
+      function updateWrongLettersElement() {
+        wrongLettersElement.innerHTML = `
+          ${wrongLetters.length > 0 ? "<p>Erradas</p>" : ""}
+          ${wrongLetters.map(letter => `<span>${letter}</span>`)}
+        `;
+        figureParts.forEach((part, index) => {
+          const errors = wrongLetters.length;
+          index < errors ? (part.style.display = "block") : (part.style.display = "none");
+        });
+        if (wrongLetters.length === figureParts.length) {
+          finalMessage.innerText = "Game Over! Perdestes. 😕";
+          finalMessageRevealWord.innerText = `A palavra era: ${selectedWord}`;
+          popup.style.display = "flex";
+          playable = false;
+        }
+      }
+
+      function showNotification() {
+        notification.classList.add("show");
+        setTimeout(() => notification.classList.remove("show"), 2000);
+      }
+
+      function handleInput(letter) {
+        if (playable && letter >= "a" && letter <= "z") {
+          if (selectedWord.includes(letter)) {
+            if (!correctLetters.includes(letter)) {
+              correctLetters.push(letter);
+              displayWord();
+            } else {
+              showNotification();
+            }
+          } else {
+            if (!wrongLetters.includes(letter)) {
+              wrongLetters.push(letter);
+              updateWrongLettersElement();
+            } else {
+              showNotification();
+            }
+          }
+        }
+      }
+
+      // Teclado PC
+      window.addEventListener("keypress", (e) => handleInput(e.key.toLowerCase()));
+
+      // Teclado Mobile
+      mobileInput.addEventListener("input", (e) => {
+        const char = e.target.value.toLowerCase().slice(-1);
+        handleInput(char);
+        e.target.value = "";
+      });
+
+      // Forçar foco no teclado ao clicar no ecrã (Mobile)
+      document.body.addEventListener("click", () => {
+        if (playable) mobileInput.focus();
+      });
+
+      playAgainButton.addEventListener("click", () => {
+        playable = true;
+        correctLetters.splice(0);
+        wrongLetters.splice(0);
+        selectedWord = words[Math.floor(Math.random() * words.length)];
+        displayWord();
+        updateWrongLettersElement();
+        popup.style.display = "none";
+        mobileInput.focus();
+      });
+
+         document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+  </body>
+</html>

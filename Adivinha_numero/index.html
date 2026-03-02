@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adivinhe o numero certo</title>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-color: #ffce00;
+            --glass: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Telas de Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .title-main {
+            font-family: 'Bungee', cursive;
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Regras Estilizadas */
+        .rules-list {
+            text-align: left;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .rules-list li { margin-bottom: 10px; list-style: none; }
+        .rules-list li::before { content: "• "; }
+
+        .btn-action {
+            font-family: 'Bungee';
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        /* Contentor do Jogo */
+        .game-container {
+            text-align: center;
+            padding: 40px;
+            background: var(--glass);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 450px;
+        }
+
+        input[type="number"] {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            border-radius: 15px;
+            padding: 10px;
+            margin: 20px 0;
+            color: #1446a0;
+        }
+
+        .feedback-text {
+            height: 30px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+
+        .chances-badge {
+            background: var(--accent-color);
+            color: black;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <div class="glass-card">
+            <h1 class="title-main mb-3">ADIVINHE O NÚMERO</h1>
+            <div class="rules-list">
+                <li>Tens apenas <strong>7 tentativas</strong> para vencer.</li>
+                <li>O número secreto está entre <strong>1 e 100</strong>.</li>
+                <li>Daremos pistas se o teu palpite é alto ou baixo.</li>
+                <li>Cuidado: Números inválidos gastam tentativas!</li>
+            </div>
+            <button class="btn btn-warning btn-action shadow" onclick="startGame()">COMEÇAR DESAFIO</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="overlay hidden">
+        <div class="glass-card">
+            <h2 id="result-title" class="title-main mb-4">FIM DE JOGO</h2>
+            <p id="result-msg" class="mb-4"></p>
+            <button class="btn btn-light btn-action" onclick="window.location.reload()">REBENTAR TUDO</button>
+        </div>
+    </div>
+
+    <div class="game-container shadow-lg">
+        <h2 class="mb-4 fw-bold">QUAL É O NÚMERO?</h2>
+        <div class="chances-badge mb-3">TENTATIVAS: <span id="chance-count">5</span></div>
+        
+        <input type="number" id="user-input" placeholder="00" min="1" max="100" />
+        
+        <p id="feedback" class="feedback-text"></p>
+        
+        <button class="btn btn-primary btn-action w-100" onclick="checkGuess()">VERIFICAR</button>
+    </div>
+
+    <script>
+        // Lógica adaptada do original
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let totalChances = 7;
+        
+        const inputEl = document.getElementById("user-input");
+        const feedbackEl = document.getElementById("feedback");
+        const chanceEl = document.getElementById("chance-count");
+        const startScreen = document.getElementById("start-screen");
+        const resultScreen = document.getElementById("result-screen");
+
+        function startGame() {
+            startScreen.classList.add("hidden");
+            inputEl.focus();
+        }
+
+        function checkGuess() {
+            let inputValue = parseInt(inputEl.value);
+            
+            if (isNaN(inputValue)) {
+                feedbackEl.textContent = "Introduz um número válido!";
+                feedbackEl.style.color = "#ff4d4d";
+                return;
+            }
+
+            totalChances--;
+            chanceEl.textContent = totalChances;
+
+            if (inputValue === randomNumber) {
+                showResult(true, "Incrível! Tu és um verdadeiro génio.");
+            } 
+            else if (totalChances === 0) {
+                showResult(false, `Que azar! O número era ${randomNumber}. 😥`);
+            } 
+            else if (inputValue > randomNumber && inputValue <= 100) {
+                feedbackEl.textContent = "Muito alto! Tenta mais baixo. 👇";
+                feedbackEl.style.color = "#ffce00";
+            } 
+            else if (inputValue < randomNumber && inputValue >= 1) {
+                feedbackEl.textContent = "Muito baixo! Tenta mais alto. 👆";
+                feedbackEl.style.color = "#4db8ff";
+            } 
+            else {
+                feedbackEl.textContent = "Isso está fora do intervalo! 🚫";
+                feedbackEl.style.color = "#ff4d4d";
+            }
+
+            inputEl.value = "";
+            inputEl.focus();
+        }
+
+        function showResult(win, message) {
+            resultScreen.classList.remove("hidden");
+            document.getElementById("result-title").textContent = win ? "VITÓRIA!" : "DERROTA!";
+            document.getElementById("result-title").style.color = win ? "#4BB543" : "#ff4d4d";
+            document.getElementById("result-msg").textContent = message;
+        }
+
+        // Permitir pressionar Enter para verificar
+        inputEl.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") checkGuess();
+        });
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

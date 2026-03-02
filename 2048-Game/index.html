@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>2048 Pixel</title>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DotGothic16&display=swap");
+
+      :root {
+        --bg-color: #faf8ef;
+        --grid-bg: #bbada0;
+        --text-dark: #776e65;
+        --pixel-border: 4px solid #553847;
+      }
+
+      * {
+        box-sizing: border-box;
+        touch-action: none; /* Impede o scroll da página enquanto joga */
+      }
+
+      body {
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        font-family: "DotGothic16", sans-serif;
+      }
+
+      /* TELA INICIAL PIXEL */
+      #start-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        text-align: center;
+      }
+
+      .pixel-card {
+        background: #ded895;
+        border: var(--pixel-border);
+        padding: 30px;
+        box-shadow: 8px 8px 0px #553847;
+      }
+
+      .btn-pixel {
+        background: #5c940d;
+        color: white;
+        border: 4px solid #000;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-family: 'DotGothic16', sans-serif;
+        font-size: 1.5rem;
+        margin-top: 20px;
+      }
+
+      /* JOGO RESPONSIVO */
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 450px;
+        padding: 10px;
+      }
+
+      .info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        font-size: 60px;
+        color: var(--text-dark);
+        margin: 0;
+      }
+
+      .grid {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100vw;
+        height: 100vw;
+        max-width: 400px;
+        max-height: 400px;
+        background-color: var(--grid-bg);
+        border: 6px solid var(--grid-bg);
+        border-radius: 6px;
+      }
+
+      .grid div {
+        width: calc(25% - 10px);
+        height: calc(25% - 10px);
+        margin: 5px;
+        border-radius: 3px;
+        background-color: #eee4da;
+        color: #afa192;
+        font-weight: bold;
+        text-align: center;
+        font-size: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .score-container {
+        text-align: center;
+        padding: 5px 15px;
+        background-color: #8f7a66;
+        color: #ffffff;
+        border-radius: 3px;
+      }
+
+      #result {
+        margin: 10px 0;
+        font-size: 14px;
+        color: var(--text-dark);
+      }
+
+      .hidden { display: none !important; }
+
+      @media (max-width: 400px) {
+        h1 { font-size: 40px; }
+        .grid div { font-size: 25px; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="start-screen">
+      <div class="pixel-card">
+        <h1>2048 PIXEL</h1>
+        <p>JUNTE OS NÚMEROS!</p>
+        <button class="btn-pixel" onclick="startGame()">JOGAR</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="info">
+        <h1>2048</h1>
+        <div class="score-container">
+          <div class="score-title">score</div>
+          <span id="score">0</span>
+        </div>
+      </div>
+      <span id="result">Chegue ao bloco <b>2048</b>!</span>
+      <div class="grid" id="grid-canvas"></div>
+    </div>
+
+    <script charset="utf-8">
+      function startGame() {
+        document.getElementById("start-screen").classList.add("hidden");
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const gridDisplay = document.querySelector(".grid");
+        const scoreDisplay = document.getElementById("score");
+        const resultDisplay = document.getElementById("result");
+        let squares = [];
+        const width = 4;
+        let score = 0;
+
+        function createBoard() {
+          for (let i = 0; i < width * width; i++) {
+            square = document.createElement("div");
+            square.innerHTML = 0;
+            gridDisplay.appendChild(square);
+            squares.push(square);
+          }
+          generate();
+          generate();
+        }
+        createBoard();
+
+        function generate() {
+          let emptySquares = squares.filter(s => s.innerHTML == 0);
+          if (emptySquares.length > 0) {
+            let randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
+            randomSquare.innerHTML = 2;
+            checkForGameOver();
+          }
+        }
+
+        // LÓGICA DE MOVIMENTAÇÃO (PRESERVADA)
+        function moveRight() {
+          for (let i = 0; i < 16; i++) {
+            if (i % 4 === 0) {
+              let row = [parseInt(squares[i].innerHTML), parseInt(squares[i+1].innerHTML), parseInt(squares[i+2].innerHTML), parseInt(squares[i+3].innerHTML)];
+              let filteredRow = row.filter(num => num);
+              let missing = 4 - filteredRow.length;
+              let zeros = Array(missing).fill(0);
+              let newRow = zeros.concat(filteredRow);
+              squares[i].innerHTML = newRow[0];
+              squares[i+1].innerHTML = newRow[1];
+              squares[i+2].innerHTML = newRow[2];
+              squares[i+3].innerHTML = newRow[3];
+            }
+          }
+        }
+
+        function moveLeft() {
+          for (let i = 0; i < 16; i++) {
+            if (i % 4 === 0) {
+              let row = [parseInt(squares[i].innerHTML), parseInt(squares[i+1].innerHTML), parseInt(squares[i+2].innerHTML), parseInt(squares[i+3].innerHTML)];
+              let filteredRow = row.filter(num => num);
+              let missing = 4 - filteredRow.length;
+              let zeros = Array(missing).fill(0);
+              let newRow = filteredRow.concat(zeros);
+              squares[i].innerHTML = newRow[0];
+              squares[i+1].innerHTML = newRow[1];
+              squares[i+2].innerHTML = newRow[2];
+              squares[i+3].innerHTML = newRow[3];
+            }
+          }
+        }
+
+        function moveUp() {
+          for (let i = 0; i < 4; i++) {
+            let column = [parseInt(squares[i].innerHTML), parseInt(squares[i+width].innerHTML), parseInt(squares[i+width*2].innerHTML), parseInt(squares[i+width*3].innerHTML)];
+            let filteredColumn = column.filter(num => num);
+            let missing = 4 - filteredColumn.length;
+            let zeros = Array(missing).fill(0);
+            let newColumn = filteredColumn.concat(zeros);
+            squares[i].innerHTML = newColumn[0];
+            squares[i+width].innerHTML = newColumn[1];
+            squares[i+width*2].innerHTML = newColumn[2];
+            squares[i+width*3].innerHTML = newColumn[3];
+          }
+        }
+
+        function moveDown() {
+          for (let i = 0; i < 4; i++) {
+            let column = [parseInt(squares[i].innerHTML), parseInt(squares[i+width].innerHTML), parseInt(squares[i+width*2].innerHTML), parseInt(squares[i+width*3].innerHTML)];
+            let filteredColumn = column.filter(num => num);
+            let missing = 4 - filteredColumn.length;
+            let zeros = Array(missing).fill(0);
+            let newColumn = zeros.concat(filteredColumn);
+            squares[i].innerHTML = newColumn[0];
+            squares[i+width].innerHTML = newColumn[1];
+            squares[i+width*2].innerHTML = newColumn[2];
+            squares[i+width*3].innerHTML = newColumn[3];
+          }
+        }
+
+        function combineRow() {
+          for (let i = 0; i < 15; i++) {
+            if (i % 4 !== 3 && squares[i].innerHTML === squares[i + 1].innerHTML && squares[i].innerHTML !== "0") {
+              let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i + 1].innerHTML);
+              squares[i].innerHTML = combinedTotal;
+              squares[i + 1].innerHTML = 0;
+              score += combinedTotal;
+              scoreDisplay.innerHTML = score;
+            }
+          }
+          checkForWin();
+        }
+
+        function combineColumn() {
+          for (let i = 0; i < 12; i++) {
+            if (squares[i].innerHTML === squares[i + width].innerHTML && squares[i].innerHTML !== "0") {
+              let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i + width].innerHTML);
+              squares[i].innerHTML = combinedTotal;
+              squares[i + width].innerHTML = 0;
+              score += combinedTotal;
+              scoreDisplay.innerHTML = score;
+            }
+          }
+          checkForWin();
+        }
+
+        // FUNÇÕES DE COMANDO
+        function keyRight() { moveRight(); combineRow(); moveRight(); generate(); }
+        function keyLeft() { moveLeft(); combineRow(); moveLeft(); generate(); }
+        function keyUp() { moveUp(); combineColumn(); moveUp(); generate(); }
+        function keyDown() { moveDown(); combineColumn(); moveDown(); generate(); }
+
+        // CONTROLO POR TECLADO
+        function control(e) {
+          if (e.keyCode === 37) keyLeft();
+          else if (e.keyCode === 38) keyUp();
+          else if (e.keyCode === 39) keyRight();
+          else if (e.keyCode === 40) keyDown();
+        }
+        document.addEventListener("keyup", control);
+
+        // CONTROLO POR ARRASTO (MOBILE)
+        const hammertime = new Hammer(gridDisplay);
+        hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+        hammertime.on("swipeleft", keyLeft);
+        hammertime.on("swiperight", keyRight);
+        hammertime.on("swipeup", keyUp);
+        hammertime.on("swipedown", keyDown);
+
+        function checkForWin() {
+          for (let i = 0; i < squares.length; i++) {
+            if (squares[i].innerHTML == 2048) {
+              resultDisplay.innerHTML = "VOCÊ VENCEU!";
+              document.removeEventListener("keyup", control);
+              hammertime.destroy();
+            }
+          }
+        }
+
+        function checkForGameOver() {
+          let zeros = squares.filter(s => s.innerHTML == 0).length;
+          if (zeros === 0) {
+            resultDisplay.innerHTML = "FIM DE JOGO!";
+            document.removeEventListener("keyup", control);
+            hammertime.destroy();
+          }
+        }
+
+        function addColours() {
+          for (let i = 0; i < squares.length; i++) {
+            let val = parseInt(squares[i].innerHTML);
+            if (val === 0) { squares[i].style.backgroundColor = "#afa192"; squares[i].style.color = "transparent"; }
+            else {
+              squares[i].style.color = val <= 4 ? "#776e65" : "white";
+              if (val == 2) squares[i].style.backgroundColor = "#eee4da";
+              else if (val == 4) squares[i].style.backgroundColor = "#ede0c8";
+              else if (val == 8) squares[i].style.backgroundColor = "#f2b179";
+              else if (val == 16) squares[i].style.backgroundColor = "#ffcea4";
+              else if (val == 32) squares[i].style.backgroundColor = "#e8c064";
+              else if (val == 64) squares[i].style.backgroundColor = "#ffab6e";
+              else if (val == 128) squares[i].style.backgroundColor = "#fd9982";
+              else if (val == 256) squares[i].style.backgroundColor = "#ead79c";
+              else if (val == 512) squares[i].style.backgroundColor = "#76daff";
+              else if (val == 1024) squares[i].style.backgroundColor = "#beeaa5";
+              else if (val == 2048) squares[i].style.backgroundColor = "#d7d4f0";
+            }
+          }
+        }
+        setInterval(addColours, 50);
+      });
+
+         document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+  </body>
+</html>

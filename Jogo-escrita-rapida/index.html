@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Teste de escrita Pro</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Bungee&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #00d1b2;
+            --bg-dark: #121212;
+            --error-red: #ff3860;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Telas de Overlay */
+        .screen-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 18, 18, 0.95);
+            z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            text-align: center;
+        }
+
+        .game-font { font-family: 'Bungee', cursive; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Estilização da Frase */
+        .quote-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            min-height: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .quote-display {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            color: #888;
+        }
+
+        .right { color: var(--primary-color); border-bottom: 2px solid var(--primary-color); }
+        .wrong { color: var(--error-red); background: rgba(255, 56, 96, 0.2); border-radius: 4px; }
+
+        /* Input */
+        .input-area {
+            background: transparent;
+            border: 2px solid #333;
+            border-radius: 15px;
+            color: white;
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 100%;
+            height: 100px;
+            resize: none;
+            transition: 0.3s;
+        }
+
+        .input-area:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(0, 209, 178, 0.2);
+        }
+
+        /* Stats */
+        .stat-card {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .hidden { display: none !important; }
+
+        .btn-game {
+            background: var(--primary-color);
+            color: #121212;
+            font-weight: bold;
+            padding: 12px 35px;
+            border-radius: 50px;
+            border: none;
+            font-family: 'Bungee';
+            transition: 0.3s;
+        }
+
+        .btn-game:hover { transform: scale(1.05); background: #fff; }
+
+        .shake { animation: shake 0.2s ease-in-out 0s 2; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="screen-overlay">
+        <div class="container">
+            <h1 class="display-2 game-font text-info mb-4">TYPING MASTER</h1>
+            <p class="lead mb-5" data-i18n="welcome">Domine o teclado, vença o tempo e desafie sua precisão.</p>
+            
+            <div class="d-flex justify-content-center gap-3 mb-4">
+                <button class="btn btn-outline-light" onclick="setLang('pt')">Português</button>
+                <button class="btn btn-outline-light" onclick="setLang('en')">English</button>
+            </div>
+
+            <button class="btn-game btn-lg" onclick="startGame()" data-i18n="play">INICIAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="end-screen" class="screen-overlay hidden">
+        <div class="container">
+            <h2 class="display-3 game-font text-danger mb-4" id="end-title">GAME OVER</h2>
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-3">
+                    <div class="h4 opacity-50" data-i18n="finalScore">Pontos</div>
+                    <div class="h2 game-font" id="final-points">0</div>
+                </div>
+            </div>
+            <button class="btn-game" onclick="location.reload()" data-i18n="restart">TENTAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <nav class="navbar border-bottom border-secondary mb-4">
+        <div class="container">
+            <span class="navbar-brand game-font text-info">TYPING PRO</span>
+            <div class="d-flex gap-3">
+                <div class="stat-card">
+                    <small class="d-block opacity-50" data-i18n="lives">Vidas</small>
+                    <span class="h5 mono" id="lives-val">5</span>
+                </div>
+                <div class="stat-card">
+                    <small class="d-block opacity-50" data-i18n="points">Pontos</small>
+                    <span class="h5 mono" id="points-val">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row mb-4 text-center">
+                    <div class="col-4">
+                        <small data-i18n="time">Tempo</small>
+                        <div class="h3 game-font text-warning" id="timer">0</div>
+                    </div>
+                    <div class="col-4">
+                        <small data-i18n="wpm">Velocidade (PPM)</small>
+                        <div class="h3 game-font text-info" id="wpm">0</div>
+                    </div>
+                    <div class="col-4">
+                        <small data-i18n="accuracy">Precisão</small>
+                        <div class="h3 game-font text-success" id="accuracy">100%</div>
+                    </div>
+                </div>
+
+                <div class="quote-container mb-4">
+                    <div id="quoteDisplay" class="quote-display mono"></div>
+                </div>
+
+                <textarea id="quoteInput" class="input-area mono" placeholder="Aguardando início..." disabled></textarea>
+                
+                <div class="text-center mt-4">
+                    <span class="badge bg-secondary p-2" id="level-label">Nível 1</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const i18n = {
+            pt: {
+                welcome: "Domine o teclado, vença o tempo e desafie sua precisão.",
+                play: "INICIAR JOGO",
+                finalScore: "Pontuação Final",
+                restart: "RECOMEÇAR",
+                lives: "Corações",
+                points: "Pontos",
+                time: "Tempo",
+                wpm: "Velocidade",
+                accuracy: "Precisão",
+                quotes: [
+                    "O sucesso é ir de fracasso em fracasso sem perder o entusiasmo.",
+                    "A tecnologia move o mundo, mas a coragem move as pessoas.",
+                    "Codificar é como escrever poesia, mas com lógica.",
+                    "A paciência é um elemento fundamental do sucesso.",
+                    "Grandes coisas nunca vêm de zonas de conforto."
+                ]
+            },
+            en: {
+                welcome: "Master the keyboard, beat the clock, and challenge your accuracy.",
+                play: "START GAME",
+                finalScore: "Final Score",
+                restart: "RESTART",
+                lives: "Lives",
+                points: "Points",
+                time: "Time",
+                wpm: "WPM Speed",
+                accuracy: "Accuracy",
+                quotes: [
+                    "The only way to do great work is to love what you do.",
+                    "Stay hungry, stay foolish.",
+                    "Life is what happens when you're busy making other plans.",
+                    "Innovation distinguishes between a leader and a follower.",
+                    "Code is like humor. When you have to explain it, it’s bad."
+                ]
+            }
+        };
+
+        let currentLang = 'pt';
+        let points = 0;
+        let lives = 5;
+        let level = 1;
+        let timerInterval;
+        let startTime;
+
+        const display = document.getElementById('quoteDisplay');
+        const input = document.getElementById('quoteInput');
+
+        function setLang(l) {
+            currentLang = l;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerText = i18n[l][el.getAttribute('data-i18n')];
+            });
+        }
+
+        async function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            input.disabled = false;
+            input.focus();
+            loadQuote();
+        }
+
+        function loadQuote() {
+            const quotes = i18n[currentLang].quotes;
+            const text = quotes[Math.floor(Math.random() * quotes.length)];
+            
+            display.innerHTML = '';
+            text.split('').forEach(char => {
+                const span = document.createElement('span');
+                span.innerText = char;
+                display.appendChild(span);
+            });
+            input.value = '';
+            startTimer();
+        }
+
+        input.addEventListener('input', () => {
+            const arrayQuote = display.querySelectorAll('span');
+            const arrayValue = input.value.split('');
+            let isCorrect = true;
+            let countCorrect = 0;
+
+            arrayQuote.forEach((span, i) => {
+                const char = arrayValue[i];
+                if (char == null) {
+                    span.classList.remove('right', 'wrong');
+                    isCorrect = false;
+                } else if (char === span.innerText) {
+                    span.classList.add('right');
+                    span.classList.remove('wrong');
+                    countCorrect++;
+                } else {
+                    span.classList.remove('right');
+                    span.classList.add('wrong');
+                    isCorrect = false;
+                }
+            });
+
+            // Lógica de Erro e Vidas
+            const lastChar = arrayValue[arrayValue.length - 1];
+            const targetChar = arrayQuote[arrayValue.length - 1]?.innerText;
+            
+            if (lastChar && lastChar !== targetChar) {
+                lives--;
+                updateStats();
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 200);
+                if (lives <= 0) endGame("GAME OVER");
+            }
+
+            // PPM e Precisão
+            const time = getTimerTime();
+            if(time > 0) {
+                document.getElementById('wpm').innerText = Math.round((countCorrect / 5) / (time / 60));
+                document.getElementById('accuracy').innerText = Math.round((countCorrect / arrayValue.length) * 100) + "%";
+            }
+
+            if (isCorrect && arrayValue.length === arrayQuote.length) {
+                points += 100 * level;
+                level++;
+                document.getElementById('level-label').innerText = `Nível ${level}`;
+                updateStats();
+                loadQuote();
+            }
+        });
+
+        function updateStats() {
+            document.getElementById('lives-val').innerText = lives;
+            document.getElementById('points-val').innerText = points;
+        }
+
+        function startTimer() {
+            startTime = new Date();
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                document.getElementById('timer').innerText = getTimerTime();
+            }, 1000);
+        }
+
+        function getTimerTime() {
+            return Math.floor((new Date() - startTime) / 1000);
+        }
+
+        function endGame(title) {
+            clearInterval(timerInterval);
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('end-title').innerText = title;
+            document.getElementById('final-points').innerText = points;
+            input.disabled = true;
+        }
+
+        // Inicializar Idioma
+        setLang('pt');
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

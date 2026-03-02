@@ -1,96 +1,280 @@
 :root {
     --bg-color: #0b0f1a;
     --card-bg: #161e2e;
+    --sidebar-bg: #111827;
     --primary: #3b82f6;
     --accent: #10b981;
     --text: #f8fafc;
+    --text-muted: #94a3b8;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     margin: 0;
-    padding-bottom: 50px;
-}
-
-/* Responsividade Básica */
-.container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 15px;
+    overflow-x: hidden;
 }
 
 header {
+    padding: 20px;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid #1f2937;
     text-align: center;
-    padding: 40px 20px;
 }
 
-.logo { font-size: 2rem; font-weight: 800; }
+.logo { font-size: 1.8rem; font-weight: 800; margin-bottom: 15px; }
 .logo span { color: var(--primary); }
 
-/* Cartão do Jogo */
-.game-card {
-    background: var(--card-bg);
-    border-radius: 18px;
+/* Categorias */
+.categories-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-bottom: 5px;
+    overflow-x: auto;
+}
+
+.cat-btn {
+    background: #1f2937;
+    border: none;
+    color: var(--text-muted);
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: 0.3s;
+}
+
+.cat-btn.active, .cat-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Layout Principal */
+.main-layout {
+    display: flex;
+    max-width: 1300px;
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+    height: 75vh;
+}
+
+/* Sidebar de Jogos */
+.game-sidebar {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--sidebar-bg);
+    border-radius: 20px;
     padding: 15px;
-    margin-bottom: 15px;
-    display: flex; /* Alinha ícone e texto lado a lado */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.game-sidebar::-webkit-scrollbar { width: 5px; }
+.game-sidebar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
+
+.game-card-mini {
+    display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
+    padding: 10px;
+    background: #1f2937;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    border: 1px solid transparent;
+}
+
+.game-card-mini:hover {
+    background: #2d3748;
+    transform: translateX(5px);
+    border-color: var(--primary);
+}
+
+.game-card-mini img {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.mini-info h4 { margin: 0; font-size: 0.9rem; }
+.mini-info span { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Painel de Detalhes */
+.game-display {
+    flex: 2;
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     border: 1px solid #1f2937;
 }
 
-.game-icon {
-    font-size: 35px;
-    background: #1f2937;
-    min-width: 70px;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
+#placeholder-msg {
+flex: 1;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+color: var(--text-muted);
 }
 
-.game-info h3 { margin: 0; font-size: 1.1rem; }
-.game-info p { margin: 5px 0 12px 0; font-size: 0.85rem; color: #94a3b8; }
+.pulse-icon { font-size: 4rem; animation: pulse 2s infinite; margin-bottom: 10px; }
 
-.btn-play {
-    display: inline-block;
-    background: var(--primary);
+.preview-banner img {
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+    border-bottom: 4px solid var(--primary);
+}
+
+.preview-info {
+    padding: 30px;
+    text-align: center;
+}
+
+.preview-info h2 { margin: 0 0 10px 0; font-size: 2rem; }
+.preview-info p { color: var(--text-muted); line-height: 1.6; margin-bottom: 25px; }
+
+.btn-main-play {
+    background: linear-gradient(135deg, var(--primary), #2563eb);
     color: white;
-    padding: 8px 18px;
-    text-decoration: none;
+    border: none;
+    padding: 16px 60px;
     border-radius: 50px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
 }
 
-/* TELA DE LOADING */
+.btn-main-play:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* Loading Overlay */
 #loading-overlay {
 position: fixed;
 top: 0; left: 0;
 width: 100%; height: 100%;
-background: rgba(11, 15, 26, 0.9);
-display: none; /* Escondido por padrão */
+background: var(--bg-color);
+display: none;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-z-index: 1000;
+z-index: 9999;
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(255,255,255,0.1);
+    width: 50px; height: 50px;
+    border: 5px solid rgba(59, 130, 246, 0.1);
     border-left-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin-bottom: 10px;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.8rem; }
+
+/* Responsividade Mobile */
+@media (max-width: 850px) {
+    .main-layout { flex-direction: column; height: auto; }
+    .game-display { order: 1; min-height: 450px; }
+    .game-sidebar { order: 2; max-height: 400px; }
 }
 
-footer { text-align: center; color: #475569; font-size: 0.8rem; margin-top: 20px; }
+/* --- RESPONSIVIDADE PARA TELEMÓVEIS E TABLETS --- */
+
+@media (max-width: 768px) {
+    /* Ajusta o espaçamento do topo */
+    header {
+        padding: 15px 10px;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    /* Muda o layout de Lado-a-Lado para Coluna */
+    .main-layout {
+        flex-direction: column;
+        height: auto; /* Permite que a página cresça conforme o conteúdo */
+        padding: 10px;
+        gap: 15px;
+    }
+
+    /* O painel do jogo (imagem e botão jogar) aparece primeiro no topo */
+    .game-display {
+        order: 1;
+        min-height: auto;
+        border-radius: 15px;
+    }
+
+    .preview-banner img {
+        height: 200px; /* Imagem um pouco menor no telemóvel */
+    }
+
+    .preview-info {
+        padding: 20px 15px;
+    }
+
+    .preview-info h2 {
+        font-size: 1.5rem;
+    }
+
+    .btn-main-play {
+        width: 100%; /* Botão ocupa a largura toda no telemóvel */
+        padding: 14px;
+    }
+
+    /* A lista de jogos aparece em baixo do painel de detalhes */
+    .game-sidebar {
+        order: 2;
+        max-height: 500px; /* Limita a altura para não ficar infinita */
+        background: transparent;
+        padding: 0;
+    }
+
+    /* Ajusta os cartões pequenos para serem mais fáceis de tocar */
+    .game-card-mini {
+        padding: 12px;
+    }
+
+    .game-card-mini img {
+        width: 45px;
+        height: 45px;
+    }
+
+    /* Faz a barra de categorias deslizar para os lados (Touch Scroll) */
+    .categories-bar {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding: 5px 10px 15px 10px;
+        -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+    }
+
+    .cat-btn {
+        padding: 8px 18px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Ajuste para ecrãs muito pequenos (iPhone SE, etc) */
+@media (max-width: 380px) {
+    .preview-banner img {
+        height: 160px;
+    }
+
+    .mini-info h4 {
+        font-size: 0.85rem;
+    }
+}

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Breakout Master Pro</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-bg: #1a1a2e;
+            --accent-color: #00d1b2;
+            --paddle-color: #ffcc00;
+            --brick-color: #00d1b2;
+            --text-white: rgba(255, 255, 255, 0.9);
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            background: radial-gradient(circle, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Bungee', cursive; color: var(--accent-color); text-shadow: 0 5px 15px rgba(0,209,178,0.3); }
+
+        /* Telas de Overlay (Início, Vitória, Regras) */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(26, 26, 46, 0.98);
+            z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        /* Canvas Responsivo */
+        canvas {
+            background: rgba(0, 0, 0, 0.3);
+            display: block;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            max-width: 100%;
+            max-height: 65vh;
+        }
+
+        /* Painel de Regras Lateral */
+        .rules-panel {
+            position: fixed;
+            top: 0; left: -400px;
+            width: 350px; height: 100%;
+            background: #16213e;
+            padding: 40px;
+            z-index: 1001;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        .rules-panel.show { left: 0; }
+
+        /* Controles Mobile */
+        .mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: none;
+            justify-content: space-around;
+            padding: 0 20px;
+            z-index: 50;
+        }
+
+        .ctrl-btn {
+            width: 70px; height: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .btn-main {
+            background: var(--accent-color);
+            color: #1a1a2e;
+            font-family: 'Bungee';
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-main:hover { transform: scale(1.05); background: #fff; }
+
+        @media (max-width: 768px) {
+            .mobile-controls { display: flex; }
+            h1 { font-size: 1.8rem; margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <div class="game-card shadow">
+            <h1 class="mb-4">BREAKOUT PRO</h1>
+            <p class="mb-4 opacity-75" data-i18n="welcome">Destrua todos os blocos e desafie seus reflexos!</p>
+            
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <button class="btn btn-sm btn-outline-info" onclick="changeLang('pt')">Português</button>
+                <button class="btn btn-sm btn-outline-info" onclick="changeLang('en')">English</button>
+            </div>
+
+            <button class="btn-main w-100" onclick="initGame()" data-i18n="play">INICIAR JOGO</button>
+        </div>
+    </div>
+
+    <div id="win-screen" class="overlay hidden">
+        <div class="game-card shadow border-success">
+            <h1 class="text-success mb-3" data-i18n="winTitle">VITÓRIA!</h1>
+            <p class="mb-4" data-i18n="winMsg">Incrível! Você limpou todos os blocos.</p>
+            <div class="h3 mb-4"><span data-i18n="score">Pontos</span>: <span id="final-score">0</span></div>
+            <button class="btn-main w-100" onclick="resetGame(true)" data-i18n="playAgain">JOGAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <div id="rules-sidebar" class="rules-panel">
+        <h2 class="mb-4" data-i18n="rulesTitle">Como Jogar:</h2>
+        <p data-i18n="rulesText">Use as setas do teclado ou os botões na tela para mover a plataforma e rebater a bola.</p>
+        <hr class="border-secondary">
+        <p class="small text-warning" data-i18n="rulesWarning">Se a bola cair, seus pontos e blocos serão resetados!</p>
+        <button class="btn btn-outline-light mt-4 w-100" onclick="toggleRules()" data-i18n="close">FECHAR</button>
+    </div>
+
+    <div class="container py-3 text-center">
+        <h1>BREAKOUT!</h1>
+        <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+            <button class="btn btn-outline-info btn-sm" onclick="toggleRules()" data-i18n="rulesBtn">REGRAS</button>
+            <div class="h5 mb-0"><span data-i18n="score">Pontos</span>: <span id="score-val">0</span></div>
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <div class="mobile-controls">
+        <div class="ctrl-btn" id="left-btn">◀</div>
+        <div class="ctrl-btn" id="right-btn">▶</div>
+    </div>
+
+    <script>
+        const i18n = {
+            pt: {
+                welcome: "Destrua todos os blocos e desafie seus reflexos!",
+                play: "INICIAR JOGO",
+                rulesTitle: "Como Jogar:",
+                rulesText: "Use as setas ou botões na tela para mover a plataforma.",
+                rulesWarning: "Se a bola cair, o progresso é reiniciado!",
+                rulesBtn: "REGRAS",
+                close: "FECHAR",
+                score: "Pontos",
+                winTitle: "VITÓRIA!",
+                winMsg: "Incrível! Você limpou todos os blocos.",
+                playAgain: "RECOMEÇAR"
+            },
+            en: {
+                welcome: "Break all blocks and challenge your reflexes!",
+                play: "START GAME",
+                rulesTitle: "How To Play:",
+                rulesText: "Use arrow keys or screen buttons to move the paddle.",
+                rulesWarning: "If you miss the ball, progress will reset!",
+                rulesBtn: "RULES",
+                close: "CLOSE",
+                score: "Score",
+                winTitle: "YOU WIN!",
+                winMsg: "Amazing! You cleared all the bricks.",
+                playAgain: "PLAY AGAIN"
+            }
+        };
+
+        let currentLang = 'pt';
+        let gameRunning = false;
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const scoreVal = document.getElementById("score-val");
+
+        // Configuração original do Canvas
+        canvas.width = 800;
+        canvas.height = 600;
+
+        let score = 0;
+        const brickRowCount = 9;
+        const brickColumnCount = 5;
+        const totalBricks = brickRowCount * brickColumnCount;
+
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 10,
+            speed: 5,
+            dx: 4,
+            dy: -4
+        };
+
+        const paddle = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 20,
+            w: 100,
+            h: 15,
+            speed: 9,
+            dx: 0
+        };
+
+        const brickInfo = {
+            w: 70,
+            h: 20,
+            padding: 10,
+            offsetX: 45,
+            offsetY: 60,
+            visible: true
+        };
+
+        let bricks = [];
+        function createBricks() {
+            bricks = [];
+            for (let i = 0; i < brickRowCount; i++) {
+                bricks[i] = [];
+                for (let j = 0; j < brickColumnCount; j++) {
+                    const x = i * (brickInfo.w + brickInfo.padding) + brickInfo.offsetX;
+                    const y = j * (brickInfo.h + brickInfo.padding) + brickInfo.offsetY;
+                    bricks[i][j] = { x, y, ...brickInfo };
+                }
+            }
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 5);
+            ctx.fillStyle = "#ffcc00";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            bricks.forEach(column => {
+                column.forEach(brick => {
+                    if (brick.visible) {
+                        ctx.beginPath();
+                        ctx.roundRect(brick.x, brick.y, brick.w, brick.h, 3);
+                        ctx.fillStyle = "#00d1b2";
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                });
+            });
+        }
+
+        function movePaddle() {
+            paddle.x += paddle.dx;
+            if (paddle.x + paddle.w > canvas.width) paddle.x = canvas.width - paddle.w;
+            if (paddle.x < 0) paddle.x = 0;
+        }
+
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x + ball.size > canvas.width || ball.x - ball.size < 0) ball.dx *= -1;
+            if (ball.y - ball.size < 0) ball.dy *= -1;
+
+            if (
+                ball.x > paddle.x &&
+                ball.x < paddle.x + paddle.w &&
+                ball.y + ball.size > paddle.y
+            ) {
+                ball.dy = -ball.speed;
+            }
+
+            bricks.forEach(column => {
+                column.forEach(brick => {
+                    if (brick.visible) {
+                        if (
+                            ball.x - ball.size > brick.x &&
+                            ball.x + ball.size < brick.x + brick.w &&
+                            ball.y + ball.size > brick.y &&
+                            ball.y - ball.size < brick.y + brick.h
+                        ) {
+                            ball.dy *= -1;
+                            brick.visible = false;
+                            score++;
+                            scoreVal.innerText = score;
+
+                            if(score === totalBricks) showWin();
+                        }
+                    }
+                });
+            });
+
+            if (ball.y + ball.size > canvas.height) resetGame(false);
+        }
+
+        function showWin() {
+            gameRunning = false;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('win-screen').classList.remove('hidden');
+        }
+
+        function resetGame(fullReset) {
+            score = 0;
+            scoreVal.innerText = score;
+            createBricks();
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dy = -ball.speed;
+            if(fullReset) {
+                document.getElementById('win-screen').classList.add('hidden');
+                gameRunning = true;
+                update();
+            }
+        }
+
+        function update() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            movePaddle();
+            moveBall();
+            drawBall();
+            drawPaddle();
+            drawBricks();
+            requestAnimationFrame(update);
+        }
+
+        // Interface
+        function changeLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerText = i18n[lang][el.getAttribute('data-i18n')];
+            });
+        }
+
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            gameRunning = true;
+            createBricks();
+            update();
+        }
+
+        function toggleRules() {
+            document.getElementById('rules-sidebar').classList.toggle('show');
+        }
+
+        // Controles
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Right" || e.key === "ArrowRight") paddle.dx = paddle.speed;
+            else if (e.key === "Left" || e.key === "ArrowLeft") paddle.dx = -paddle.speed;
+        });
+        document.addEventListener("keyup", () => paddle.dx = 0);
+
+        const bl = document.getElementById('left-btn'), br = document.getElementById('right-btn');
+        const startLeft = (e) => { e.preventDefault(); paddle.dx = -paddle.speed; };
+        const startRight = (e) => { e.preventDefault(); paddle.dx = paddle.speed; };
+        const stop = () => paddle.dx = 0;
+
+        bl.addEventListener('touchstart', startLeft);
+        br.addEventListener('touchstart', startRight);
+        bl.addEventListener('touchend', stop);
+        br.addEventListener('touchend', stop);
+
+        changeLang('pt');
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

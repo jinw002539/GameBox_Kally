@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Tower Blocks Pro - 3D Stack</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Bungee&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #333344;
+            --accent-color: #ff4d4d;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #D0CBC7;
+            font-family: 'Comfortaa', cursive;
+        }
+
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Score estilizado */
+        #score {
+            position: absolute;
+            top: 5vh;
+            width: 100%;
+            text-align: center;
+            font-size: 12vh;
+            font-weight: 700;
+            color: var(--primary-color);
+            z-index: 10;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateY(-200px);
+        }
+
+        /* Telas de Overlay */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .game-title {
+            font-family: 'Bungee', cursive;
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Botão estilizado Bootstrap */
+        .btn-play {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        /* Instruções flutuantes */
+        #instructions {
+            position: absolute;
+            bottom: 10vh;
+            width: 100%;
+            text-align: center;
+            color: var(--primary-color);
+            opacity: 0;
+            transition: 0.5s;
+            font-weight: bold;
+        }
+
+        /* Estados do Jogo */
+        .playing #score { transform: translateY(0); }
+        .playing #instructions { opacity: 0.6; }
+        .ended #score { transform: translateY(15vh) scale(1.2); }
+        .hidden { display: none !important; opacity: 0; }
+
+        #game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        <div id="game-canvas"></div>
+        
+        <div id="score">0</div>
+
+        <div id="start-screen" class="overlay">
+            <div class="glass-card">
+                <h1 class="game-title">TOWER<br>BLOCKS</h1>
+                <p class="mb-4 text-muted">Empilhe o mais alto que puder!</p>
+                <button class="btn btn-dark btn-play shadow" onclick="game.onAction()">JOGAR</button>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="overlay hidden">
+            <div class="glass-card border-danger">
+                <h2 class="fw-bold mb-3">FIM DE JOGO</h2>
+                <p class="mb-4">Sua torre foi incrível!</p>
+                <button class="btn btn-danger btn-play shadow" onclick="game.onAction()">RECOMEÇAR</button>
+            </div>
+        </div>
+
+        <div id="instructions">TOQUE OU ESPAÇO PARA SOLTAR</div>
+    </div>
+
+    <script>
+        // LÓGICA ORIGINAL ADAPTADA
+        var Stage = (function () {
+            function Stage() {
+                var _this = this;
+                this.render = function () { this.renderer.render(this.scene, this.camera); };
+                this.add = function (elem) { this.scene.add(elem); };
+                this.remove = function (elem) { this.scene.remove(elem); };
+                this.container = document.getElementById("game-canvas");
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor("#D0CBC7", 1);
+                this.container.appendChild(this.renderer.domElement);
+                this.scene = new THREE.Scene();
+                var aspect = window.innerWidth / window.innerHeight;
+                var d = 20;
+                this.camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
+                this.camera.position.set(2, 2, 2);
+                this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+                this.light = new THREE.DirectionalLight(0xffffff, 0.5);
+                this.light.position.set(0, 499, 0);
+                this.scene.add(this.light);
+                this.softLight = new THREE.AmbientLight(0xffffff, 0.4);
+                this.scene.add(this.softLight);
+                window.addEventListener("resize", function () { return _this.onResize(); });
+                this.onResize();
+            }
+            Stage.prototype.setCamera = function (y, speed) {
+                if (speed === void 0) speed = 0.3;
+                TweenLite.to(this.camera.position, speed, { y: y + 4, ease: Power1.easeInOut });
+                TweenLite.to(this.camera.lookAt, speed, { y: y, ease: Power1.easeInOut });
+            };
+            Stage.prototype.onResize = function () {
+                var viewSize = 30;
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.camera.left = window.innerWidth / -viewSize;
+                this.camera.right = window.innerWidth / viewSize;
+                this.camera.top = window.innerHeight / viewSize;
+                this.camera.bottom = window.innerHeight / -viewSize;
+                this.camera.updateProjectionMatrix();
+            };
+            return Stage;
+        })();
+
+        var Block = (function () {
+            function Block(block) {
+                this.STATES = { ACTIVE: "active", STOPPED: "stopped", MISSED: "missed" };
+                this.MOVE_AMOUNT = 12;
+                this.dimension = { width: 0, height: 0, depth: 0 };
+                this.position = { x: 0, y: 0, z: 0 };
+                this.targetBlock = block;
+                this.index = (this.targetBlock ? this.targetBlock.index : 0) + 1;
+                this.workingPlane = this.index % 2 ? "x" : "z";
+                this.workingDimension = this.index % 2 ? "width" : "depth";
+                this.dimension.width = this.targetBlock ? this.targetBlock.dimension.width : 10;
+                this.dimension.height = this.targetBlock ? this.targetBlock.dimension.height : 2;
+                this.dimension.depth = this.targetBlock ? this.targetBlock.dimension.depth : 10;
+                this.position.x = this.targetBlock ? this.targetBlock.position.x : 0;
+                this.position.y = this.dimension.height * this.index;
+                this.position.z = this.targetBlock ? this.targetBlock.position.z : 0;
+                this.colorOffset = this.targetBlock ? this.targetBlock.colorOffset : Math.round(Math.random() * 100);
+                
+                if (!this.targetBlock) {
+                    this.color = 0x333344;
+                } else {
+                    var offset = this.index + this.colorOffset;
+                    var r = Math.sin(0.3 * offset) * 55 + 200;
+                    var g = Math.sin(0.3 * offset + 2) * 55 + 200;
+                    var b = Math.sin(0.3 * offset + 4) * 55 + 200;
+                    this.color = new THREE.Color(r / 255, g / 255, b / 255);
+                }
+                
+                this.state = this.index > 1 ? this.STATES.ACTIVE : this.STATES.STOPPED;
+                this.speed = -0.1 - this.index * 0.005;
+                if (this.speed < -4) this.speed = -4;
+                this.direction = this.speed;
+                
+                var geometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
+                geometry.applyMatrix(new THREE.Matrix4().makeTranslation(this.dimension.width / 2, this.dimension.height / 2, this.dimension.depth / 2));
+                this.material = new THREE.MeshToonMaterial({ color: this.color, shading: THREE.FlatShading });
+                this.mesh = new THREE.Mesh(geometry, this.material);
+                this.mesh.position.set(this.position.x, this.position.y, this.position.z);
+                
+                if (this.state == this.STATES.ACTIVE) {
+                    this.position[this.workingPlane] = Math.random() > 0.5 ? -this.MOVE_AMOUNT : this.MOVE_AMOUNT;
+                }
+            }
+            Block.prototype.reverseDirection = function () { this.direction = this.direction > 0 ? this.speed : Math.abs(this.speed); };
+            Block.prototype.place = function () {
+                this.state = this.STATES.STOPPED;
+                var overlap = this.targetBlock.dimension[this.workingDimension] - Math.abs(this.position[this.workingPlane] - this.targetBlock.position[this.workingPlane]);
+                var blocksToReturn = { plane: this.workingPlane, direction: this.direction };
+                
+                if (this.dimension[this.workingDimension] - overlap < 0.3) {
+                    overlap = this.dimension[this.workingDimension];
+                    blocksToReturn.bonus = true;
+                    this.position.x = this.targetBlock.position.x;
+                    this.position.z = this.targetBlock.position.z;
+                }
+                
+                if (overlap > 0) {
+                    var choppedDimensions = { width: this.dimension.width, height: this.dimension.height, depth: this.dimension.depth };
+                    choppedDimensions[this.workingDimension] -= overlap;
+                    this.dimension[this.workingDimension] = overlap;
+                    
+                    var placedGeometry = new THREE.BoxGeometry(this.dimension.width, this.dimension.height, this.dimension.depth);
+                    placedGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(this.dimension.width / 2, this.dimension.height / 2, this.dimension.depth / 2));
+                    var placedMesh = new THREE.Mesh(placedGeometry, this.material);
+                    
+                    var choppedGeometry = new THREE.BoxGeometry(choppedDimensions.width, choppedDimensions.height, choppedDimensions.depth);
+                    choppedGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(choppedDimensions.width / 2, choppedDimensions.height / 2, choppedDimensions.depth / 2));
+                    var choppedMesh = new THREE.Mesh(choppedGeometry, this.material);
+                    
+                    var choppedPosition = { x: this.position.x, y: this.position.y, z: this.position.z };
+                    if (this.position[this.workingPlane] < this.targetBlock.position[this.workingPlane]) {
+                        this.position[this.workingPlane] = this.targetBlock.position[this.workingPlane];
+                    } else {
+                        choppedPosition[this.workingPlane] += overlap;
+                    }
+                    
+                    placedMesh.position.set(this.position.x, this.position.y, this.position.z);
+                    choppedMesh.position.set(choppedPosition.x, choppedPosition.y, choppedPosition.z);
+                    blocksToReturn.placed = placedMesh;
+                    if (!blocksToReturn.bonus) blocksToReturn.chopped = choppedMesh;
+                } else {
+                    this.state = this.STATES.MISSED;
+                }
+                return blocksToReturn;
+            };
+            Block.prototype.tick = function () {
+                if (this.state == this.STATES.ACTIVE) {
+                    var value = this.position[this.workingPlane];
+                    if (value > this.MOVE_AMOUNT || value < -this.MOVE_AMOUNT) this.reverseDirection();
+                    this.position[this.workingPlane] += this.direction;
+                    this.mesh.position[this.workingPlane] = this.position[this.workingPlane];
+                }
+            };
+            return Block;
+        })();
+
+        var Game = (function () {
+            function Game() {
+                var _this = this;
+                this.STATES = { LOADING: "loading", PLAYING: "playing", READY: "ready", ENDED: "ended", RESETTING: "resetting" };
+                this.blocks = [];
+                this.state = this.STATES.LOADING;
+                this.stage = new Stage();
+                this.mainContainer = document.getElementById("container");
+                this.scoreContainer = document.getElementById("score");
+                this.newBlocks = new THREE.Group();
+                this.placedBlocks = new THREE.Group();
+                this.choppedBlocks = new THREE.Group();
+                this.stage.add(this.newBlocks);
+                this.stage.add(this.placedBlocks);
+                this.stage.add(this.choppedBlocks);
+                this.addBlock();
+                this.tick();
+                this.updateState(this.STATES.READY);
+                
+                document.addEventListener("keydown", function (e) { if (e.keyCode == 32) _this.onAction(); });
+                document.addEventListener("click", function (e) { if(e.target.tagName !== 'BUTTON') _this.onAction(); });
+            }
+            Game.prototype.updateState = function (newState) {
+                for (var key in this.STATES) this.mainContainer.classList.remove(this.STATES[key]);
+                this.mainContainer.classList.add(newState);
+                this.state = newState;
+                
+                // Controle de telas
+                document.getElementById('start-screen').classList.toggle('hidden', newState !== this.STATES.READY);
+                document.getElementById('game-over-screen').classList.toggle('hidden', newState !== this.STATES.ENDED);
+            };
+            Game.prototype.onAction = function () {
+                switch (this.state) {
+                    case this.STATES.READY: this.startGame(); break;
+                    case this.STATES.PLAYING: this.placeBlock(); break;
+                    case this.STATES.ENDED: this.restartGame(); break;
+                }
+            };
+            Game.prototype.startGame = function () {
+                this.scoreContainer.innerHTML = "0";
+                this.updateState(this.STATES.PLAYING);
+                this.addBlock();
+            };
+            Game.prototype.restartGame = function () {
+                var _this = this;
+                this.updateState(this.STATES.RESETTING);
+                var oldBlocks = this.placedBlocks.children;
+                for (var i = 0; i < oldBlocks.length; i++) {
+                    TweenLite.to(oldBlocks[i].scale, 0.2, { x: 0, y: 0, z: 0, delay: (oldBlocks.length - i) * 0.02, onComplete: (function(block){ return function(){ _this.placedBlocks.remove(block); }})(oldBlocks[i]) });
+                }
+                this.stage.setCamera(2, 0.5);
+                this.blocks = this.blocks.slice(0, 1);
+                setTimeout(function () { _this.startGame(); }, 600);
+            };
+            Game.prototype.placeBlock = function () {
+                var _this = this;
+                var currentBlock = this.blocks[this.blocks.length - 1];
+                var newBlocks = currentBlock.place();
+                this.newBlocks.remove(currentBlock.mesh);
+                if (newBlocks.placed) this.placedBlocks.add(newBlocks.placed);
+                if (newBlocks.chopped) {
+                    this.choppedBlocks.add(newBlocks.chopped);
+                    TweenLite.to(newBlocks.chopped.position, 1, { y: "-=30", ease: Power1.easeIn, onComplete: function () { return _this.choppedBlocks.remove(newBlocks.chopped); } });
+                }
+                this.addBlock();
+            };
+            Game.prototype.addBlock = function () {
+                var lastBlock = this.blocks[this.blocks.length - 1];
+                if (lastBlock && lastBlock.state == lastBlock.STATES.MISSED) return this.endGame();
+                this.scoreContainer.innerHTML = String(this.blocks.length - 1);
+                var newKidOnTheBlock = new Block(lastBlock);
+                this.newBlocks.add(newKidOnTheBlock.mesh);
+                this.blocks.push(newKidOnTheBlock);
+                this.stage.setCamera(this.blocks.length * 2);
+            };
+            Game.prototype.endGame = function () { this.updateState(this.STATES.ENDED); };
+            Game.prototype.tick = function () {
+                var _this = this;
+                this.blocks[this.blocks.length - 1].tick();
+                this.stage.render();
+                requestAnimationFrame(function () { _this.tick(); });
+            };
+            return Game;
+        })();
+
+        var game = new Game();
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

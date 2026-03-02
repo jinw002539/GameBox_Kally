@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whack-a-mole</title>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Nunito:400,700,900");
+
+      * { box-sizing: border-box; }
+      html { font-size: 10px; }
+
+      body {
+        padding: 0;
+        margin: 0;
+        font-family: "Nunito", sans-serif;
+        background: #fff9e2;
+        text-align: center;
+        overflow-x: hidden;
+      }
+
+      /* --- TELA INICIAL --- */
+      #start-screen {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255, 249, 226, 0.98);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        transition: opacity 0.5s;
+      }
+
+      .menu-card {
+        background: white;
+        padding: 4rem;
+        border-radius: 3rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        max-width: 90%;
+      }
+
+      /* --- MODAIS (REGRAS E RECORDES) --- */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 3rem;
+        border-radius: 2rem;
+        box-shadow: 0 0 100px rgba(0,0,0,0.3);
+        z-index: 1000;
+        width: 320px;
+        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+
+      @keyframes popIn {
+        from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      }
+
+      .modal h2 { color: #ff7660; font-size: 2.5rem; margin-top: 0; }
+      .modal p { font-size: 1.8rem; color: #3b1010; margin: 2rem 0; }
+
+      /* --- ELEMENTOS DO JOGO --- */
+      h1 { font-size: 4.5rem; margin: 2rem 0; color: #ff7660; font-weight: 900; }
+
+      .score-box {
+        background: #ffe5cf;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        color: #3b1010;
+        font-size: 2rem;
+        font-weight: 700;
+        display: inline-block;
+        box-shadow: 0 4px 0 #d4b49a;
+      }
+
+      .game {
+        width: 100%;
+        max-width: 600px;
+        height: 400px;
+        display: flex;
+        flex-wrap: wrap;
+        margin: 20px auto;
+        opacity: 0.3;
+        transition: all 0.5s;
+        pointer-events: none;
+      }
+
+      .game.active {
+        opacity: 1;
+        pointer-events: all;
+        transform: scale(1);
+      }
+
+      .hole {
+        flex: 1 0 33.33%;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hole:after {
+        display: block;
+        background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1159990/dirt.svg") bottom center no-repeat;
+        background-size: contain;
+        content: "";
+        width: 100%;
+        height: 70px;
+        position: absolute;
+        z-index: 2;
+        bottom: -30px;
+      }
+
+      .mole {
+        background: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1159990/mole.svg") bottom center no-repeat;
+        background-size: 60%;
+        position: absolute;
+        top: 100%;
+        width: 100%;
+        height: 100%;
+        transition: all 0.4s;
+        cursor: pointer;
+      }
+
+      .hole.up .mole { top: 0; }
+
+      /* BOTOES */
+      .btn {
+        font-family: inherit;
+        border: 0;
+        color: #fff;
+        padding: 1.5rem 3rem;
+        cursor: pointer;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin: 10px;
+        transition: transform 0.2s;
+      }
+
+      .btn-start { background: #ff7660; box-shadow: 0 4px 0 #d45643; }
+      .btn-secondary { background: #3b1010; box-shadow: 0 4px 0 #000; }
+      .btn:active { transform: translateY(3px); box-shadow: none; }
+
+      .hidden { display: none !important; }
+
+      /* RESPONSIVIDADE MOBILE */
+      @media (max-width: 600px) {
+        .game { height: auto; padding: 10px; }
+        .hole { flex: 1 0 50%; height: 140px; }
+        h1 { font-size: 3rem; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="start-screen">
+      <div class="menu-card">
+        <h1>Whack-a-mole!</h1>
+        <div class="score-box" style="margin-bottom: 20px;">Recorde: <span id="high-score-display">0</span></div>
+        <br>
+        <button class="btn btn-start" onclick="startGame()">JOGAR</button>
+        <button class="btn btn-secondary" onclick="showModal('rules-modal')">REGRAS</button>
+      </div>
+    </div>
+
+    <div id="rules-modal" class="modal">
+      <h2>Como Jogar</h2>
+      <p>Acerte o máximo de toupeiras que conseguir em 10 segundos! Clique ou toque nelas assim que aparecerem.</p>
+      <button class="btn btn-secondary" onclick="closeModals()">Entendido!</button>
+    </div>
+
+    <div id="record-modal" class="modal">
+      <h2>🎉 Novo Recorde!</h2>
+      <p>Incrível! Você alcançou <span id="new-record-val">0</span> pontos!</p>
+      <button class="btn btn-start" onclick="closeModals()">Uau!</button>
+    </div>
+
+    <div class="header">
+      <h1>Whack-a-mole!</h1>
+      <div class="score-box">Score: <span id="score">0</span></div>
+    </div>
+
+    <div class="game">
+      <div class="hole hole1"><div class="mole"></div></div>
+      <div class="hole hole2"><div class="mole"></div></div>
+      <div class="hole hole3"><div class="mole"></div></div>
+      <div class="hole hole4"><div class="mole"></div></div>
+      <div class="hole hole5"><div class="mole"></div></div>
+      <div class="hole hole6"><div class="mole"></div></div>
+    </div>
+
+    <script>
+      const holes = document.querySelectorAll(".hole");
+      const scoreBoard = document.querySelector("#score");
+      const highScoreDisplay = document.querySelector("#high-score-display");
+      const moles = document.querySelectorAll(".mole");
+      const startScreen = document.querySelector("#start-screen");
+      const gameContainer = document.querySelector(".game");
+      
+      let lastHole;
+      let timeUp = false;
+      let score = 0;
+      
+      // Carrega o recorde guardado no navegador
+      let highScore = localStorage.getItem("whackHighScore") || 0;
+      highScoreDisplay.textContent = highScore;
+
+      function randomTime(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+      }
+
+      function randomHole(holes) {
+        const idx = Math.floor(Math.random() * holes.length);
+        const hole = holes[idx];
+        if (hole === lastHole) return randomHole(holes);
+        lastHole = hole;
+        return hole;
+      }
+
+      function peep() {
+        const time = randomTime(300, 1000);
+        const hole = randomHole(holes);
+        hole.classList.add("up");
+        setTimeout(() => {
+          hole.classList.remove("up");
+          if (!timeUp) peep();
+        }, time);
+      }
+
+      function showModal(id) {
+        document.getElementById(id).style.display = "block";
+      }
+
+      function closeModals() {
+        document.querySelectorAll('.modal').forEach(m => m.style.display = "none");
+      }
+
+      function startGame() {
+        // Efeito especial: ativa o tabuleiro e esconde o menu
+        startScreen.classList.add("hidden");
+        gameContainer.classList.add("active");
+        scoreBoard.textContent = 0;
+        timeUp = false;
+        score = 0;
+        
+        peep();
+
+        setTimeout(() => {
+          timeUp = true;
+          gameContainer.classList.remove("active");
+          startScreen.classList.remove("hidden");
+          checkRecord();
+        }, 10000); // 10 segundos de partida
+      }
+
+      function checkRecord() {
+        if (score > highScore) {
+          highScore = score;
+          // Salva os pontos permanentemente
+          localStorage.setItem("whackHighScore", highScore);
+          highScoreDisplay.textContent = highScore;
+          document.getElementById("new-record-val").textContent = score;
+          showModal("record-modal");
+        }
+      }
+
+      function bonk(e) {
+        if (!e.isTrusted) return; // Segurança contra scripts
+        score++;
+        this.parentNode.classList.remove("up");
+        scoreBoard.textContent = score;
+        
+        // Efeito visual rápido de acerto
+        this.style.filter = "brightness(1.5)";
+        setTimeout(() => this.style.filter = "none", 100);
+      }
+
+      // Suporte para Desktop e Mobile (toque rápido)
+      moles.forEach(mole => mole.addEventListener("click", bonk));
+      moles.forEach(mole => mole.addEventListener("touchstart", function(e) {
+        e.preventDefault();
+        bonk.call(this, { isTrusted: true });
+      }));
+
+         document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+  </body>
+</html>

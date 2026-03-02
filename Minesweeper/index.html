@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Minesweeper Pro Master</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://quge5.com/88/tag.min.js" data-zone="213157" async data-cfasync="false"></script>
+    <meta name="monetag" content="9e9b6e6bd2d0351ee9abd27124ab6535">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Poppins:wght@300;600&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --accent-color: #4fb578;
+            --tile-color: #2c2c44;
+            --tile-clicked: #16213e;
+            --text-main: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background: radial-gradient(circle, #1a1a2e 0%, #0f3460 100%);
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { font-family: 'Bungee', cursive; color: var(--accent-color); text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* Telas de Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(26, 26, 46, 0.98);
+            z-index: 1000;
+            display: flex; justify-content: center; align-items: center;
+            text-align: center;
+        }
+
+        .hidden { display: none !important; }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        /* Tabuleiro */
+        #board {
+            width: 400px;
+            height: 400px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 8px solid rgba(0, 0, 0, 0.3);
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #board div {
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+            background-color: var(--tile-color);
+            user-select: none;
+        }
+
+        #board div:hover { background-color: #3d3d5c; }
+
+        .tile-clicked { background-color: var(--tile-clicked) !important; color: #fff; }
+
+        /* Cores dos Números */
+        .x1 { color: #4db8ff; } .x2 { color: #44eb83; } .x3 { color: #ff4d4d; }
+        .x4 { color: #bb86fc; } .x5 { color: #ffb74d; } .x6 { color: #00bcd4; }
+
+        /* Painel Lateral */
+        .rules-panel {
+            position: fixed;
+            top: 0; left: -400px;
+            width: 350px; height: 100%;
+            background: #16213e;
+            padding: 40px;
+            z-index: 1001;
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+        .rules-panel.show { left: 0; }
+
+        .btn-main {
+            background: var(--accent-color);
+            color: white;
+            font-family: 'Bungee';
+            padding: 12px 30px;
+            border-radius: 50px;
+            border: none;
+            transition: 0.3s;
+        }
+        .btn-main:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(79, 181, 120, 0.4); }
+
+        #flag-button {
+            width: 80px; height: 80px;
+            font-size: 30px;
+            border-radius: 50%;
+            border: 3px solid #4fb578;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 450px) {
+            #board { width: 320px; height: 320px; }
+            #board div { width: 38px; height: 38px; font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <div class="game-card shadow">
+            <h1 class="mb-4">MINESWEEPER PRO</h1>
+            <p class="mb-4 opacity-75" data-i18n="welcome">Limpe o campo sem detonar nenhuma mina!</p>
+            
+            <div class="d-flex justify-content-center gap-2 mb-4">
+                <button class="btn btn-sm btn-outline-success" onclick="changeLang('pt')">Português</button>
+                <button class="btn btn-sm btn-outline-success" onclick="changeLang('en')">English</button>
+            </div>
+
+            <button class="btn-main w-100" onclick="initGame()" data-i18n="play">INICIAR MISSÃO</button>
+        </div>
+    </div>
+
+    <div id="end-screen" class="overlay hidden">
+        <div class="game-card shadow border-danger" id="result-card">
+            <h1 id="result-title" class="mb-3">GAME OVER</h1>
+            <p id="result-text" class="mb-4 opacity-75">Você atingiu uma mina!</p>
+            <button class="btn-main w-100" onclick="location.reload()" data-i18n="retry">TENTAR NOVAMENTE</button>
+        </div>
+    </div>
+
+    <div id="rules-sidebar" class="rules-panel">
+        <h2 class="mb-4" data-i18n="rulesTitle">Como Jogar:</h2>
+        <ul class="text-start small mb-4">
+            <li data-i18n="r1">Clique em um quadrado para revelá-lo.</li>
+            <li data-i18n="r2">Os números indicam quantas minas existem ao redor.</li>
+            <li data-i18n="r3">Use o botão de Bandeira para marcar onde você acha que há minas.</li>
+            <li data-i18n="r4">Ganhe ao revelar todos os quadrados sem minas!</li>
+        </ul>
+        <button class="btn btn-outline-light w-100" onclick="toggleRules()" data-i18n="close">FECHAR</button>
+    </div>
+
+    <div class="container py-3 text-center">
+        <h1>MINESWEEPER</h1>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+            <button class="btn btn-outline-success btn-sm" onclick="toggleRules()" data-i18n="rulesBtn">REGRAS</button>
+            <div class="h5 mb-0"><span data-i18n="mines">Minas</span>: <span id="mines-count" class="badge bg-danger">0</span></div>
+        </div>
+
+        <div id="board"></div>
+
+        <div class="mt-4">
+            <button id="flag-button" class="btn btn-dark">🚩</button>
+            <p class="mt-2 small opacity-50" data-i18n="flagHint">Ative a bandeira para marcar minas</p>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            pt: {
+                welcome: "Limpe o campo sem detonar nenhuma mina!",
+                play: "INICIAR MISSÃO",
+                rulesTitle: "Protocolo de Jogo:",
+                r1: "Clique para revelar o quadrado.",
+                r2: "Números mostram minas adjacentes.",
+                r3: "Bandeira evita cliques acidentais em minas.",
+                r4: "Cuidado: um erro e a missão acaba!",
+                rulesBtn: "REGRAS", close: "FECHAR", mines: "Minas",
+                flagHint: "Modo Bandeira: Ativado/Desativado",
+                winTitle: "VITÓRIA!", winMsg: "Campo limpo com sucesso!",
+                loseTitle: "DETONADO!", loseMsg: "Você atingiu uma mina!",
+                retry: "VOLTAR AO INÍCIO"
+            },
+            en: {
+                welcome: "Clear the field without hitting any mines!",
+                play: "START MISSION",
+                rulesTitle: "Rules of Engagement:",
+                r1: "Click to reveal a tile.",
+                r2: "Numbers show adjacent mines.",
+                r3: "Use Flag mode to mark suspected mines.",
+                r4: "Be careful: one mistake and it's over!",
+                rulesBtn: "RULES", close: "CLOSE", mines: "Mines",
+                flagHint: "Flag Mode: On/Off",
+                winTitle: "VICTORY!", winMsg: "Field cleared successfully!",
+                loseTitle: "BOOM!", loseMsg: "You hit a mine!",
+                retry: "RETRY MISSION"
+            }
+        };
+
+        let currentLang = 'pt';
+        let board = [];
+        let rows = 8, columns = 8;
+        let minesCount = 10;
+        let minesLocation = [];
+        let tilesClicked = 0;
+        let flagEnabled = false;
+        let gameOver = false;
+
+        function changeLang(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                el.innerText = i18n[lang][el.getAttribute('data-i18n')];
+            });
+        }
+
+        function toggleRules() {
+            document.getElementById('rules-sidebar').classList.toggle('show');
+        }
+
+        function setFlag() {
+            flagEnabled = !flagEnabled;
+            const btn = document.getElementById("flag-button");
+            btn.classList.toggle("btn-success", flagEnabled);
+            btn.classList.toggle("btn-dark", !flagEnabled);
+        }
+
+        function setMines() {
+            minesLocation = [];
+            let minesLeft = minesCount;
+            while (minesLeft > 0) {
+                let r = Math.floor(Math.random() * rows);
+                let c = Math.floor(Math.random() * columns);
+                let id = r + "-" + c;
+                if (!minesLocation.includes(id)) {
+                    minesLocation.push(id);
+                    minesLeft--;
+                }
+            }
+        }
+
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById("mines-count").innerText = minesCount;
+            document.getElementById("flag-button").addEventListener("click", setFlag);
+            setMines();
+            
+            const boardEl = document.getElementById("board");
+            boardEl.innerHTML = "";
+            board = [];
+
+            for (let r = 0; r < rows; r++) {
+                let row = [];
+                for (let c = 0; c < columns; c++) {
+                    let tile = document.createElement("div");
+                    tile.id = r + "-" + c;
+                    tile.addEventListener("click", clickTile);
+                    boardEl.append(tile);
+                    row.push(tile);
+                }
+                board.push(row);
+            }
+        }
+
+        function clickTile() {
+            if (gameOver || this.classList.contains("tile-clicked")) return;
+
+            let tile = this;
+            if (flagEnabled) {
+                tile.innerText = (tile.innerText === "") ? "🚩" : "";
+                return;
+            }
+
+            if (minesLocation.includes(tile.id)) {
+                endGame(false);
+                return;
+            }
+
+            let coords = tile.id.split("-");
+            checkMine(parseInt(coords[0]), parseInt(coords[1]));
+        }
+
+        function checkMine(r, c) {
+            if (r < 0 || r >= rows || c < 0 || c >= columns) return;
+            if (board[r][c].classList.contains("tile-clicked")) return;
+
+            board[r][c].classList.add("tile-clicked");
+            tilesClicked++;
+
+            let minesFound = 0;
+            // Check neighbors
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    minesFound += checkTile(r + i, c + j);
+                }
+            }
+
+            if (minesFound > 0) {
+                board[r][c].innerText = minesFound;
+                board[r][c].classList.add("x" + minesFound);
+            } else {
+                board[r][c].innerText = "";
+                // Auto-expand
+                for (let i = -1; i <= 1; i++) {
+                    for (let j = -1; j <= 1; j++) {
+                        checkMine(r + i, c + j);
+                    }
+                }
+            }
+
+            if (tilesClicked === rows * columns - minesCount) {
+                endGame(true);
+            }
+        }
+
+        function checkTile(r, c) {
+            if (r < 0 || r >= rows || c < 0 || c >= columns) return 0;
+            return minesLocation.includes(r + "-" + c) ? 1 : 0;
+        }
+
+        function endGame(won) {
+            gameOver = true;
+            revealMines();
+            
+            const screen = document.getElementById('end-screen');
+            const title = document.getElementById('result-title');
+            const text = document.getElementById('result-text');
+            const card = document.getElementById('result-card');
+
+            screen.classList.remove('hidden');
+            
+            if (won) {
+                title.innerText = i18n[currentLang].winTitle;
+                text.innerText = i18n[currentLang].winMsg;
+                title.className = "text-success";
+                card.className = "game-card shadow border-success";
+            } else {
+                title.innerText = i18n[currentLang].loseTitle;
+                text.innerText = i18n[currentLang].loseMsg;
+                title.className = "text-danger";
+                card.className = "game-card shadow border-danger";
+            }
+        }
+
+        function revealMines() {
+            minesLocation.forEach(id => {
+                let coords = id.split("-");
+                let tile = board[coords[0]][coords[1]];
+                tile.innerText = "💣";
+                tile.style.backgroundColor = "#ff4d4d";
+            });
+        }
+
+        changeLang('pt');
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

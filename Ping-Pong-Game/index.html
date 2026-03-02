@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Ping Pong Pro - Ultimate 2P</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #05050a;
+            --neon-green: #39ff14;
+            --neon-blue: #04d9ff;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            font-family: 'Orbitron', sans-serif;
+            color: white;
+        }
+
+        /* Bloqueio de Rotação (Obrigatório) */
+        #orientation-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        @media (orientation: portrait) {
+            #orientation-overlay { display: flex; }
+            #game-ui { display: none; }
+        }
+
+        .phone-icon {
+            font-size: 50px;
+            animation: rotatePhone 2s infinite ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Tela Inicial Bonita */
+        .start-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1a1a2e 0%, #05050a 100%);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-logo {
+            font-family: 'Bungee', cursive;
+            font-size: clamp(2rem, 8vw, 5rem);
+            text-shadow: 0 0 20px var(--neon-green);
+            margin-bottom: 40px;
+            letter-spacing: 5px;
+        }
+
+        .btn-start {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 15px 60px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            transition: 0.4s;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2);
+        }
+
+        .btn-start:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 40px var(--neon-green);
+            transform: scale(1.05);
+        }
+
+        /* HUD de Pontos */
+        .score-container {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-evenly;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .score-box {
+            font-size: 4rem;
+            font-family: 'Bungee';
+            opacity: 0.6;
+        }
+
+        canvas {
+            display: block;
+            background: #000;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="orientation-overlay">
+        <div class="phone-icon">📱🔄</div>
+        <h2>VIRE O DISPOSITIVO</h2>
+        <p>O modo de 2 jogadores requer a tela na horizontal.</p>
+    </div>
+
+    <div id="start-screen" class="start-overlay">
+        <h1 class="game-logo">PING PONG<br><span style="color:var(--neon-blue)">PRO</span></h1>
+        <button class="btn-start shadow" onclick="initGame()">START GAME</button>
+        <p class="mt-4 text-muted">Controle deslizando em cada lado da tela</p>
+    </div>
+
+    <div id="game-ui">
+        <div class="score-container">
+            <div id="scoreL" class="score-box" style="color: var(--neon-green)">0</div>
+            <div id="scoreR" class="score-box" style="color: var(--neon-blue)">0</div>
+        </div>
+        <canvas id="pong"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("pong");
+        const ctx = canvas.getContext("2d");
+
+        // Configurações do Jogo
+        let scoreL = 0, scoreR = 0;
+        const paddleW = 15, paddleH = 100;
+        let leftY, rightY;
+        
+        // Objeto Bola (Lógica Original Restaurada)
+        const ball = {
+            x: 0, y: 0,
+            radius: 10,
+            speed: 7,
+            velocityX: 7,
+            velocityY: 7
+        };
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speed = 7;
+            ball.velocityX = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+            ball.velocityY = (Math.random() * 2 - 1) * ball.speed;
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            leftY = canvas.height / 2 - paddleH / 2;
+            rightY = canvas.height / 2 - paddleH / 2;
+            resetBall();
+        }
+
+        // CONTROLES TOUCH (2 JOGADORES INDEPENDENTES)
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            Array.from(e.touches).forEach(touch => {
+                if (touch.clientX < canvas.width / 2) {
+                    leftY = touch.clientY - paddleH / 2;
+                } else {
+                    rightY = touch.clientY - paddleH / 2;
+                }
+            });
+        }, { passive: false });
+
+        // LÓGICA DE MOVIMENTAÇÃO E COLISÃO (SISTEMA DO JOGO ORIGINAL)
+        function update() {
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+
+            // Limites Superior/Inferior
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.velocityY = -ball.velocityY;
+            }
+
+            // Seleciona a raquete baseada no lado da bola
+            let player = (ball.x < canvas.width / 2) ? {y: leftY, side: 'L'} : {y: rightY, side: 'R'};
+
+            // Colisão com Raquetes
+            if (collision(ball, player)) {
+                // Onde a bola bateu na raquete
+                let collidePoint = (ball.y - (player.y + paddleH / 2));
+                collidePoint = collidePoint / (paddleH / 2);
+
+                // Ângulo de reflexão
+                let angleRad = (Math.PI / 4) * collidePoint;
+                let direction = (ball.x < canvas.width / 2) ? 1 : -1;
+
+                ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+                ball.velocityY = ball.speed * Math.sin(angleRad);
+                
+                // Aumenta a velocidade gradualmente
+                ball.speed += 0.5;
+            }
+
+            // Pontuação
+            if (ball.x - ball.radius < 0) {
+                scoreR++;
+                document.getElementById('scoreR').innerText = scoreR;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                scoreL++;
+                document.getElementById('scoreL').innerText = scoreL;
+                resetBall();
+            }
+        }
+
+        function collision(b, p) {
+            const p_top = p.y;
+            const p_bottom = p.y + paddleH;
+            const p_left = (p.side === 'L') ? 0 : canvas.width - paddleW;
+            const p_right = (p.side === 'L') ? paddleW : canvas.width;
+
+            const b_top = b.y - b.radius;
+            const b_bottom = b.y + b.radius;
+            const b_left = b.x - b.radius;
+            const b_right = b.x + b.radius;
+
+            return b_right > p_left && b_bottom > p_top && b_left < p_right && b_top < p_bottom;
+        }
+
+        function draw() {
+            // Fundo
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Linha Central
+            ctx.setLineDash([15, 15]);
+            ctx.strokeStyle = "rgba(255,255,255,0.1)";
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            // Raquetes (Glow Effect)
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = "#39ff14";
+            ctx.shadowColor = "#39ff14";
+            ctx.fillRect(0, leftY, paddleW, paddleH);
+
+            ctx.fillStyle = "#04d9ff";
+            ctx.shadowColor = "#04d9ff";
+            ctx.fillRect(canvas.width - paddleW, rightY, paddleW, paddleH);
+
+            // Bola
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#fff";
+            ctx.fillStyle = "#FFF";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0; // Reset glow
+
+            update();
+            requestAnimationFrame(draw);
+        }
+
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            resize();
+            draw();
+        }
+
+        window.addEventListener('resize', resize);
+
+           document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 ||
+                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+    </script>
+</body>
+</html>

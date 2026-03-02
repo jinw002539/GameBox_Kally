@@ -24,99 +24,172 @@
 
     <header>
         <div class="logo">🎮 GameBox <span>Kally</span></div>
-        <p>A tua biblioteca de jogos</p>
+        <nav class="categories-bar">
+            <button class="cat-btn active" onclick="filterGames('todos')">Todos</button>
+            <button class="cat-btn" onclick="filterGames('arcade')">Arcade</button>
+            <button class="cat-btn" onclick="filterGames('raciocinio')">Raciocínio</button>
+            <button class="cat-btn" onclick="filterGames('acao')">Ação</button>
+        </nav>
     </header>
 
-    <main class="container">
-        <div class="game-card">
-            <div class="game-icon">🌍</div>
-            <div class="game-info">
-                <h3>Jogo das Capitais</h3>
-                <p>Teste seus conhecimentos geográficos e descubra o mundo.</p>
-                <a href="Jogo_das_capitais/index.html" class="btn-play">Jogar Agora</a>
-            </div>
-        </div>
+    <main class="main-layout">
+        <section class="game-sidebar" id="gameList">
 
-        <div class="game-card">
-            <div class="game-icon">🚀</div>
-            <div class="game-info">
-                <h3>Nebula Raider</h3>
-                <p>Sobreviva aos ataques alienígenas nesta aventura espacial.</p>
-                <a href="Nebula_raider/index.html" class="btn-play">Jogar Agora</a>
+            <div class="game-card-mini" data-category="acao" onclick="showDetails('Nebula Raider', 'Combate espacial intenso contra hordas de alienígenas.', 'nebula_raider.png', 'Nebula_raider/index.html')">
+                <img src="nebula_raider.png" alt="Nebula">
+                <div class="mini-info"><h4>Nebula Raider</h4><span>Ação</span></div>
             </div>
-        </div>
 
-        <div class="game-card">
-            <div class="game-icon">🏁</div>
-            <div class="game-info">
-                <h3>Neon Checkers</h3>
-                <p>O clássico jogo de damas com um visual futurista e neon.</p>
-                <a href="Neon_checkes/index.html" class="btn-play">Jogar Agora</a>
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Flappy Bird', 'O clássico desafio de desviar dos canos.', 'flappy_bird.png', 'Flappy-Bird/index.html')">
+                <img src="flappy_bird.png" alt="Flappy">
+                <div class="mini-info"><h4>Flappy Bird</h4><span>Arcade</span></div>
             </div>
-        </div>
 
-        <div class="game-card">
-            <div class="game-icon">🧠</div>
-            <div class="game-info">
-                <h3>Quiz matemática</h3>
-                <p>Quão rápido você é na resolução de exercícios?</p>
-                <a href="Reflexo/index.html" class="btn-play">Jogar Agora</a>
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Snake Game', 'Guie a cobra e coma as frutas sem bater nas paredes.', 'cobra.png', 'Snake-Game/index.html')">
+                <img src="cobra.png" alt="Snake">
+                <div class="mini-info"><h4>Jogo da Cobra</h4><span>Clássico</span></div>
             </div>
-        </div>
 
-        <div class="game-card">
-            <div class="game-icon">⭕</div>
-            <div class="game-info">
-                <h3>X e O</h3>
-                <p>O famoso Jogo do Galo. Desafie seus amigos agora.</p>
-                <a href="X_O/index.html" class="btn-play">Jogar Agora</a>
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Whack A Mole', 'Seja rápido e acerte as toupeiras que saem dos buracos!', 'Whack-A-Mole.png', 'Whack-A-Mole/index.html')">
+                <img src="Whack-A-Mole.png" alt="Mole">
+                <div class="mini-info"><h4>Whack A Mole</h4><span>Agilidade</span></div>
             </div>
-        </div>
+
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Tower Blocks', 'Empilhe blocos para construir a torre mais alta do mundo.', 'towerblock.png', 'Tower-Blocks/index.html')">
+                <img src="towerblock.png" alt="Tower">
+                <div class="mini-info"><h4>Tower Blocks</h4><span>Equilíbrio</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Ping Pong', 'O clássico tênis de mesa virtual.', 'pingpong.png', 'Ping-Pong-Game/index.html')">
+                <img src="pingpong.png" alt="PingPong">
+                <div class="mini-info"><h4>Ping Pong</h4><span>Esporte</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Breakout', 'Destrua todos os blocos usando a bola e a plataforma.', 'icon-512.png', 'Breakout-Game/index.html')">
+                <img src="icon-512.png" alt="Breakout">
+                <div class="mini-info"><h4>Breakout</h4><span>Arcade</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('2048', 'Combine os números para chegar ao bloco 2048.', '2048.png', '2048-Game/index.html')">
+                <img src="2048.png" alt="2048">
+                <div class="mini-info"><h4>2048</h4><span>Lógica</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Jogo das Capitais', 'Mostre que você conhece todos os países e capitais.', 'capitais.png', 'Jogo_das_capitais/index.html')">
+                <img src="capitais.png" alt="Capitais">
+                <div class="mini-info"><h4>Capitais</h4><span>Geografia</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Campo Minado', 'Desmarque as bombas usando apenas a sua lógica.', 'Minesweeper.png', 'Minesweeper/index.html')">
+                <img src="Minesweeper.png" alt="Mines">
+                <div class="mini-info"><h4>Minesweeper</h4><span>Estratégia</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Simon Says', 'Repita a sequência de cores e sons sem errar.', 'simonSay.png', 'Simon-Says/index.html')">
+                <img src="simonSay.png" alt="Simon">
+                <div class="mini-info"><h4>Simon Says</h4><span>Memória</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Jogo da Forca', 'Tente adivinhar a palavra antes que o boneco seja enforcado.', 'jogo_forca.png', 'jogo_forca/index.html')">
+                <img src="jogo_forca.png" alt="Forca">
+                <div class="mini-info"><h4>Jogo da Forca</h4><span>Palavras</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Neon Checkers', 'Damas clássicas com um visual neon incrível.', 'checkes.png', 'Neon_checkes/index.html')">
+                <img src="checkes.png" alt="Damas">
+                <div class="mini-info"><h4>Damas Neon</h4><span>Tabuleiro</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('X e O', 'O clássico Jogo do Galo para diversão rápida.', 'XO.png', 'X_O/index.html')">
+                <img src="XO.png" alt="XO">
+                <div class="mini-info"><h4>X e O</h4><span>Clássico</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Adivinha o Número', 'Um número secreto foi gerado. Consegue adivinhar?', 'icon-512.png', 'Adivinha_numero/index.html')">
+                <img src="icon-512.png" alt="Adivinha">
+                <div class="mini-info"><h4>Adivinha o numero</h4><span>Mistério</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="raciocinio" onclick="showDetails('Reflexo Matemática', 'Resolva cálculos rápidos para testar seus reflexos.', 'icon-512.png', 'quiz-matematica/index.html')">
+                <img src="icon-512.png" alt="Reflexo">
+                <div class="mini-info"><h4>Quiz Matematico</h4><span>Educação</span></div>
+            </div>
+
+            <div class="game-card-mini" data-category="arcade" onclick="showDetails('Escrita Rápida', 'Quão rápido você consegue digitar as palavras?', 'icon-512.png', 'Escrita_rapida/index.html')">
+                <img src="icon-512.png" alt="Escrita">
+                <div class="mini-info"><h4>Escrita Rápida</h4><span>Agilidade</span></div>
+            </div>
+
+        </section>
+
+        <section class="game-display" id="gameDisplay">
+            <div id="placeholder-msg">
+                <div class="pulse-icon">🎮</div>
+                <p>Selecione um jogo para começar</p>
+            </div>
+
+            <div id="details-view" style="display: none;">
+                <div class="preview-banner">
+                    <img id="display-img" src="" alt="Banner">
+                </div>
+                <div class="preview-info">
+                    <h2 id="display-title">Nome do Jogo</h2>
+                    <p id="display-desc">Descrição completa.</p>
+                    <button id="play-now-btn" class="btn-main-play">JOGAR AGORA</button>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer>
-        <p>&copy; Kally 2026 GameBox</p>
+        <p>&copy; Kally 2026 GameBox - Todos os direitos reservados</p>
     </footer>
 
     <script>
-        const buttons = document.querySelectorAll('.btn-play');
         const loader = document.getElementById('loading-overlay');
+        const detailsView = document.getElementById('details-view');
+        const placeholder = document.getElementById('placeholder-msg');
 
-        buttons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                // 1. Impede o jogo de abrir imediatamente
-                e.preventDefault();
+        function showDetails(title, desc, img, link) {
+            placeholder.style.display = 'none';
+            detailsView.style.display = 'block';
 
-                const linkDoJogo = this.getAttribute('href');
+            document.getElementById('display-title').innerText = title;
+            document.getElementById('display-desc').innerText = desc;
+            document.getElementById('display-img').src = img;
 
-                // 2. Mostra o loading
+            const playBtn = document.getElementById('play-now-btn');
+            playBtn.onclick = function() {
                 loader.style.display = 'flex';
-
-                // 3. Espera 5 segundos antes de mudar de página
                 setTimeout(() => {
-                    window.location.href = linkDoJogo;
-                }, 5000); // 5000 milisegundos = 5 segundos
+                    window.location.href = link;
+                }, 2000);
+            };
+        }
+
+        function filterGames(category) {
+            const items = document.querySelectorAll('.game-card-mini');
+            const btns = document.querySelectorAll('.cat-btn');
+
+            btns.forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            items.forEach(item => {
+                if(category === 'todos' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
             });
-        });
+        }
 
-        // CORREÇÃO: Esconder o loading se o usuário voltar para a biblioteca
-        window.addEventListener('pageshow', function(event) {
-            // Se o usuário voltou via botão "Back", escondemos o loader
-            loader.style.display = 'none';
-        });
+        window.addEventListener('pageshow', () => { loader.style.display = 'none'; });
 
-        // Impede o botão direito
-        document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // Impede atalhos de teclado (F12, Ctrl+Shift+I, Ctrl+U)
-        document.onkeydown = function(e) {
-            if (e.keyCode == 123 ||
-                (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) ||
-                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
-                return false;
-            }
+        // Proteção contra cópia e inspeção
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = e => {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false;
         };
     </script>
-
 </body>
 </html>
